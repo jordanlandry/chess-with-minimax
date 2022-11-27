@@ -1,58 +1,19 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import { PieceType } from "../data/interfaces";
-import nextId from "../helpers/nextId";
+import { createContext, useEffect, useRef, useState } from "react";
+import { BOARD_SIZE, colors, MAX_WIDTH, STARTING_POSITION } from "../data/properties";
 import Piece from "./Piece";
-import { colors } from "../data/properties";
 
 export const ColorContext = createContext(colors);
 export default function Chess() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ctx, setCtx] = useState<any>(null);
 
-  const BOARD_SIZE = 8;
-  const [canvWidth, setCanvWidth] = useState(Math.floor(window.innerWidth / 2));
+  // ------------------ State ------------------
+  const [canvWidth, setCanvWidth] = useState(Math.min(Math.floor(window.innerWidth / 2), MAX_WIDTH));
   const [squareSize, setSquareSize] = useState(canvWidth / BOARD_SIZE);
-  const [turn, setTurn] = useState(0);
-
-  const STARTING_POSITION: PieceType[] = [
-    { id: nextId(), team: 0, type: "r", x: 0, y: 0 },
-    { id: nextId(), team: 0, type: "n", x: 1, y: 0 },
-    { id: nextId(), team: 0, type: "b", x: 2, y: 0 },
-    { id: nextId(), team: 0, type: "q", x: 3, y: 0 },
-    { id: nextId(), team: 0, type: "k", x: 4, y: 0 },
-    { id: nextId(), team: 0, type: "b", x: 5, y: 0 },
-    { id: nextId(), team: 0, type: "n", x: 6, y: 0 },
-    { id: nextId(), team: 0, type: "r", x: 7, y: 0 },
-    { id: nextId(), team: 0, type: "p", x: 0, y: 1 },
-    { id: nextId(), team: 0, type: "p", x: 1, y: 1 },
-    { id: nextId(), team: 0, type: "p", x: 2, y: 1 },
-    { id: nextId(), team: 0, type: "p", x: 3, y: 1 },
-    { id: nextId(), team: 0, type: "p", x: 4, y: 1 },
-    { id: nextId(), team: 0, type: "p", x: 5, y: 1 },
-    { id: nextId(), team: 0, type: "p", x: 6, y: 1 },
-    { id: nextId(), team: 0, type: "p", x: 7, y: 1 },
-    { id: nextId(), team: 1, type: "r", x: 0, y: 7 },
-    { id: nextId(), team: 1, type: "n", x: 1, y: 7 },
-    { id: nextId(), team: 1, type: "b", x: 2, y: 7 },
-    { id: nextId(), team: 1, type: "q", x: 3, y: 7 },
-    { id: nextId(), team: 1, type: "k", x: 4, y: 7 },
-    { id: nextId(), team: 1, type: "b", x: 5, y: 7 },
-    { id: nextId(), team: 1, type: "n", x: 6, y: 7 },
-    { id: nextId(), team: 1, type: "r", x: 7, y: 7 },
-    { id: nextId(), team: 1, type: "p", x: 0, y: 6 },
-    { id: nextId(), team: 1, type: "p", x: 1, y: 6 },
-    { id: nextId(), team: 1, type: "p", x: 2, y: 6 },
-    { id: nextId(), team: 1, type: "p", x: 3, y: 6 },
-    { id: nextId(), team: 1, type: "p", x: 4, y: 6 },
-    { id: nextId(), team: 1, type: "p", x: 5, y: 6 },
-    { id: nextId(), team: 1, type: "p", x: 6, y: 6 },
-    { id: nextId(), team: 1, type: "p", x: 7, y: 6 },
-  ];
+  const [turn, setTurn] = useState(0); // 0 = white, 1 = black
 
   const [selected, setSelected] = useState("");
   const [pieces, setPieces] = useState(STARTING_POSITION);
-
-  // Create context for color
 
   const drawBoard = () => {
     // Draw grid with alternating colors for light and dark squares
@@ -66,6 +27,7 @@ export default function Chess() {
     }
   };
 
+  // Get Canvas
   useEffect(() => {
     const canvas: HTMLCanvasElement = canvasRef.current!;
     const context = canvas.getContext("2d")!;
@@ -81,12 +43,13 @@ export default function Chess() {
 
   // Update canv width on window resize
   useEffect(() => {
+    // Handle Resize with max width
     const handleResize = () => {
-      setCanvWidth(Math.floor(window.innerWidth / 2));
+      const width = Math.min(Math.floor(window.innerWidth / 2), MAX_WIDTH);
+      setCanvWidth(width);
     };
 
     window.addEventListener("resize", handleResize);
-
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
@@ -95,6 +58,7 @@ export default function Chess() {
     setSquareSize(canvWidth / BOARD_SIZE);
   }, [canvWidth]);
 
+  // ------------------ Piece Elements ------------------
   const pieceElements = pieces.map((piece) => (
     <Piece
       key={piece.id}
@@ -119,6 +83,7 @@ export default function Chess() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // ------------------ Render ------------------
   return (
     <div>
       <canvas ref={canvasRef} width={canvWidth} height={canvWidth} />

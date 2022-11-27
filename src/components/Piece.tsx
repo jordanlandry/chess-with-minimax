@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { PieceProps } from "../data/interfaces";
 
 import { ColorContext } from "./Chess";
@@ -8,6 +8,7 @@ export default function Piece({ squareSize, id, team, type, setSelected, selecte
 
   // Get context from parent component
   const colors = useContext(ColorContext);
+  const [hovering, setHovering] = useState(false);
 
   const getPiece = () => {
     if (team === 1) {
@@ -56,6 +57,7 @@ export default function Piece({ squareSize, id, team, type, setSelected, selecte
   const bg = selected ? colors.selected : "";
   return (
     <div
+      data-hover-color={colors.hover}
       className={`piece`}
       style={{
         fontSize: `${squareSize * SCALE_FACTOR}px`,
