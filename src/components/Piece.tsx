@@ -1,15 +1,13 @@
 import { useContext, useState } from "react";
 import { PieceProps } from "../data/interfaces";
-
-import { ColorContext } from "./Chess";
+import { colors } from "../data/properties";
 
 export default function Piece({ squareSize, id, team, type, setSelected, selected, x, y }: PieceProps) {
   // Black pieces
 
-  // Get context from parent component
-  const colors = useContext(ColorContext);
   const [hovering, setHovering] = useState(false);
 
+  // Will change these to images later
   const getPiece = () => {
     if (team === 1) {
       switch (type) {

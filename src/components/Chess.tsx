@@ -2,7 +2,6 @@ import { createContext, useEffect, useRef, useState } from "react";
 import { BOARD_SIZE, colors, MAX_WIDTH, STARTING_POSITION } from "../data/properties";
 import Piece from "./Piece";
 
-export const ColorContext = createContext(colors);
 export default function Chess() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ctx, setCtx] = useState<any>(null);
@@ -10,7 +9,7 @@ export default function Chess() {
   // ------------------ State ------------------
   const [canvWidth, setCanvWidth] = useState(Math.min(Math.floor(window.innerWidth / 2), MAX_WIDTH));
   const [squareSize, setSquareSize] = useState(canvWidth / BOARD_SIZE);
-  const [turn, setTurn] = useState(0); // 0 = white, 1 = black
+  const [turn, setTurn] = useState<0 | 1>(0); // 0 = white, 1 = black
 
   const [selected, setSelected] = useState("");
   const [pieces, setPieces] = useState(STARTING_POSITION);
@@ -87,7 +86,7 @@ export default function Chess() {
   return (
     <div>
       <canvas ref={canvasRef} width={canvWidth} height={canvWidth} />
-      <ColorContext.Provider value={colors}>{pieceElements}</ColorContext.Provider>
+      {pieceElements}
     </div>
   );
 }
