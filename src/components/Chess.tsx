@@ -1,5 +1,6 @@
 import { createContext, useEffect, useRef, useState } from "react";
-import { BOARD_SIZE, colors, MAX_WIDTH, STARTING_POSITION } from "../data/properties";
+import { PieceType } from "../data/interfaces";
+import { BOARD_SIZE, colors, MAX_WIDTH, moves, STARTING_POSITION } from "../data/properties";
 import Piece from "./Piece";
 
 export default function Chess() {
@@ -14,6 +15,7 @@ export default function Chess() {
   const [selected, setSelected] = useState("");
   const [pieces, setPieces] = useState(STARTING_POSITION);
 
+  // ------------------ Draw Functions ------------------
   const drawBoard = () => {
     // Draw grid with alternating colors for light and dark squares
     for (let i = 0; i < BOARD_SIZE; i++) {
@@ -26,6 +28,45 @@ export default function Chess() {
     }
   };
 
+  const drawMoves = () => {
+    // Draw possible moves
+    const piece = pieces.find((p: PieceType) => p.id === selected);
+    if (!piece) return;
+
+    const possibleMoves = moves[piece.type];
+    const availableSpots = [];
+    for (let i = 0; i < possibleMoves.normal.length; i++) {
+      const move = possibleMoves.normal[i];
+      const x = piece.x + move.x;
+      const y = piece.y + move.y;
+
+      // If out of bounds return
+      if (x < 0 || x > 7 || y < 0 || y > 7) continue;
+
+      // Return if there is a piece in the path
+      if (piece.type !== "k" && piece.type !== "n") {
+        const pieceInPath = pieces.find((p: PieceType) => p.x === x && p.y === y);
+        if (pieceInPath) continue;
+      }
+
+      // If there is a piece in the spot, make sure it's not the same team
+      const pieceInSpot = pieces.find((p: PieceType) => p.x === x && p.y === y);
+      if (pieceInSpot) {
+        if (pieceInSpot.team === piece.team) continue;
+      }
+
+      availableSpots.push({ x, y });
+    }
+
+    // Draw available spots
+    for (let i = 0; i < availableSpots.length; i++) {
+      const { x, y } = availableSpots[i];
+      ctx.fillStyle = colors.availableMove;
+      ctx.fillRect(x * squareSize, y * squareSize, squareSize, squareSize);
+    }
+  };
+
+  // ------------------ Use Effects ------------------
   // Get Canvas
   useEffect(() => {
     const canvas: HTMLCanvasElement = canvasRef.current!;
@@ -56,6 +97,13 @@ export default function Chess() {
   useEffect(() => {
     setSquareSize(canvWidth / BOARD_SIZE);
   }, [canvWidth]);
+
+  // Update showMoves on selected change
+  useEffect(() => {
+    if (!ctx) return;
+    drawBoard();
+    drawMoves();
+  }, [selected]);
 
   // ------------------ Piece Elements ------------------
   const pieceElements = pieces.map((piece) => (
