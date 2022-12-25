@@ -1,140 +1,113 @@
-import { createContext, useEffect, useRef, useState } from "react";
-import { PieceType } from "../data/interfaces";
-import { BOARD_SIZE, colors, MAX_WIDTH, moves, STARTING_POSITION } from "../data/properties";
+import { useEffect, useRef, useState } from "react";
+import { BOARD_SIZE, colors, STARTING_POSITION } from "../data/properties";
+import getAvailableMoves from "../helpers/getAvailableMoves";
+import nextId from "../helpers/nextId";
+import useKeybind from "../hooks/useKeybind";
+import useWidth from "../hooks/useWidth";
 import Piece from "./Piece";
+import Square from "./Square";
+
+interface position {
+  x: number;
+  y: number;
+}
+
+interface pieceType extends position {
+  id: string;
+  team: 0 | 1;
+  type: "p" | "r" | "k" | "b" | "q" | "k";
+}
 
 export default function Chess() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [ctx, setCtx] = useState<any>(null);
+  // ~~~ HOOKS ~~~ \\
+  useWidth();
+  useKeybind("Escape", () => setSelectedPiece(undefined));
 
-  // ------------------ State ------------------
-  const [canvWidth, setCanvWidth] = useState(Math.min(Math.floor(window.innerWidth / 2), MAX_WIDTH));
-  const [squareSize, setSquareSize] = useState(canvWidth / BOARD_SIZE);
-  const [turn, setTurn] = useState<0 | 1>(0); // 0 = white, 1 = black
+  // ~~~ STATES ~~~ \\
+  const [board, setBoard] = useState(STARTING_POSITION);
+  const [squareElements, setSquareElements] = useState<any>([]);
+  const [selectedPiece, setSelectedPiece] = useState<position>();
+  const [availableMoves, setAvailableMoves] = useState<position[]>([]);
 
-  const [selected, setSelected] = useState("");
-  const [pieces, setPieces] = useState(STARTING_POSITION);
+  // ~~~ REFS ~~~ \\
+  const boardRef = useRef<HTMLDivElement>(null);
 
-  // ------------------ Draw Functions ------------------
-  const drawBoard = () => {
-    // Draw grid with alternating colors for light and dark squares
+  // ~~~ INITIALIZE BOARD ~~~ \\
+  useEffect(() => {
+    let key = 0;
+    const squareElements: any[] = [];
+
     for (let i = 0; i < BOARD_SIZE; i++) {
       for (let j = 0; j < BOARD_SIZE; j++) {
-        if ((i + j) % 2 === 0) ctx.fillStyle = colors.light;
-        else ctx.fillStyle = colors.dark;
+        let color = (i + j) % 2 === 0 ? colors.light : colors.dark;
 
-        ctx.fillRect(i * squareSize, j * squareSize, squareSize, squareSize);
+        availableMoves.forEach((move: position) => {
+          if (move.x === j && move.y === i) color = board[i][j] ? colors.overTake : colors.availableMove;
+        });
+
+        squareElements.push(<Square key={key} color={color} onClick={movePiece} x={i} y={j} />);
+        key++;
       }
     }
+
+    setSquareElements(squareElements);
+  }, [availableMoves]);
+
+  // ~~~ AVAILABLE MOVES ~~~ \\
+  useEffect(() => {
+    setAvailableMoves(
+      selectedPiece
+        ? getAvailableMoves(board, board[selectedPiece!.y][selectedPiece!.x], selectedPiece?.x, selectedPiece?.y)
+        : []
+    );
+  }, [selectedPiece]);
+
+  // ~~~ ELEMENTS ~~~ \\
+  const pieceElements = board.map((row, i) => {
+    return row.map((piece, j) => {
+      return piece ? (
+        <Piece
+          id={nextId()}
+          key={nextId()}
+          x={j}
+          y={i}
+          team={piece === piece.toUpperCase() ? 1 : 0}
+          type={piece.toLowerCase()}
+          width={boardRef.current?.offsetWidth || null}
+          setSelectedPiece={setSelectedPiece}
+        />
+      ) : null;
+    });
+  });
+
+  // ~~~ FUNCTIONS ~~~ \\
+  const movePiece = (y: number, x: number) => {
+    for (let i = 0; i < availableMoves.length; i++) {
+      if (availableMoves[i].x === x && availableMoves[i].y === y) {
+        const newBoard = [...board];
+        newBoard[y][x] = board[selectedPiece!.y][selectedPiece!.x];
+        newBoard[selectedPiece!.y][selectedPiece!.x] = "";
+        setBoard(newBoard);
+        setSelectedPiece(undefined);
+        return;
+      }
+    }
+
+    setSelectedPiece(undefined);
   };
 
-  const drawMoves = () => {
-    // Draw possible moves
-    const piece = pieces.find((p: PieceType) => p.id === selected);
-    if (!piece) return;
-
-    const possibleMoves = moves[piece.type];
-    const availableSpots = [];
-    for (let i = 0; i < possibleMoves.normal.length; i++) {
-      const move = possibleMoves.normal[i];
-      const x = piece.x + move.x;
-      const y = piece.y + move.y;
-
-      // If out of bounds return
-      if (x < 0 || x > 7 || y < 0 || y > 7) continue;
-
-      // Return if there is a piece in the path
-      if (piece.type !== "k" && piece.type !== "n") {
-        const pieceInPath = pieces.find((p: PieceType) => p.x === x && p.y === y);
-        if (pieceInPath) continue;
-      }
-
-      // If there is a piece in the spot, make sure it's not the same team
-      const pieceInSpot = pieces.find((p: PieceType) => p.x === x && p.y === y);
-      if (pieceInSpot) {
-        if (pieceInSpot.team === piece.team) continue;
-      }
-
-      availableSpots.push({ x, y });
-    }
-
-    // Draw available spots
-    for (let i = 0; i < availableSpots.length; i++) {
-      const { x, y } = availableSpots[i];
-      ctx.fillStyle = colors.availableMove;
-      ctx.fillRect(x * squareSize, y * squareSize, squareSize, squareSize);
-    }
-  };
-
-  // ------------------ Use Effects ------------------
-  // Get Canvas
-  useEffect(() => {
-    const canvas: HTMLCanvasElement = canvasRef.current!;
-    const context = canvas.getContext("2d")!;
-
-    setCtx(context);
-  }, []);
-
-  // Initial Draw
-  useEffect(() => {
-    if (!ctx) return;
-    drawBoard();
-  }, [ctx, canvWidth]);
-
-  // Update canv width on window resize
-  useEffect(() => {
-    // Handle Resize with max width
-    const handleResize = () => {
-      const width = Math.min(Math.floor(window.innerWidth / 2), MAX_WIDTH);
-      setCanvWidth(width);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Update square size on canv width change
-  useEffect(() => {
-    setSquareSize(canvWidth / BOARD_SIZE);
-  }, [canvWidth]);
-
-  // Update showMoves on selected change
-  useEffect(() => {
-    if (!ctx) return;
-    drawBoard();
-    drawMoves();
-  }, [selected]);
-
-  // ------------------ Piece Elements ------------------
-  const pieceElements = pieces.map((piece) => (
-    <Piece
-      key={piece.id}
-      id={piece.id}
-      type={piece.type}
-      team={piece.team}
-      x={piece.x}
-      y={piece.y}
-      squareSize={squareSize}
-      setSelected={setSelected}
-      selected={piece.id === selected}
-    />
-  ));
-
-  // Reset selected when user presses escape
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelected("");
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  // ------------------ Render ------------------
+  // ~~~ RENDER ~~~ \\
   return (
-    <div>
-      <canvas ref={canvasRef} width={canvWidth} height={canvWidth} />
+    <div
+      ref={boardRef}
+      style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
+        width: "min(100%, 800px)",
+      }}
+    >
       {pieceElements}
+      {squareElements}
     </div>
   );
 }
