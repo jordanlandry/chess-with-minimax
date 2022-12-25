@@ -1,9 +1,9 @@
-export default function Piece({ x, y, team, type, width, setSelectedPiece, id }: any) {
+export default function Piece({ x, y, team, type, width, setSelectedPiece, id, onClick }: any) {
   const img = "../src/assets/images/" + type + team + ".png";
 
   return (
     <img
-      onClick={() => setSelectedPiece({ x, y })}
+      onClick={() => onClick({ x, y, team, type })}
       alt={type}
       src={img}
       width="100%"
