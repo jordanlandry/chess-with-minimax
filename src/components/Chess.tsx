@@ -36,12 +36,10 @@ export default function Chess() {
           if (move.x === j && move.y === i) color = board[i][j] ? colors.overTake : colors.availableMove;
         });
 
-        squareElements.push(<Square key={key} color={color} onClick={movePiece} x={i} y={j} />);
+        squareElements.push(<Square key={key} color={color} onClick={clickSquareToMove} x={i} y={j} />);
         key++;
       }
     }
-
-    console.log(board);
 
     setSquareElements(squareElements);
   }, [availableMoves]);
@@ -69,24 +67,32 @@ export default function Chess() {
           width={boardRef.current?.offsetWidth || null}
           setSelectedPiece={setSelectedPiece}
           onClick={handlePieceClick}
+          // isSelected={selectedPiece === }
         />
       ) : null;
     });
   });
 
   // ~~~ FUNCTIONS ~~~ \\
-  function movePiece(y: number, x: number) {
+  function clickSquareToMove(y: number, x: number) {
+    if (!selectedPiece) return;
+
+    // If the selected square is an available move, move the piece there
     for (let i = 0; i < availableMoves.length; i++) {
       if (availableMoves[i].x === x && availableMoves[i].y === y) {
         const newBoard = [...board];
         newBoard[y][x] = board[selectedPiece!.y][selectedPiece!.x];
         newBoard[selectedPiece!.y][selectedPiece!.x] = "";
+
+        // Update state
         setBoard(newBoard);
         setSelectedPiece(undefined);
+        setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
         return;
       }
     }
 
+    // If the selected square is not an available move, deselect the piece
     setSelectedPiece(undefined);
   }
 
@@ -107,7 +113,7 @@ export default function Chess() {
     for (let i = 0; i < availableMoves.length; i++) {
       if (availableMoves[i].x === piece.x && availableMoves[i].y === piece.y) {
         moveFrom(selectedPiece!.x, selectedPiece!.y, piece.x, piece.y);
-        // setWhosTurn(whosTurn === 0 ? 1 : 0);
+        setWhosTurn(whosTurn === 0 ? 1 : 0);
       }
     }
   }

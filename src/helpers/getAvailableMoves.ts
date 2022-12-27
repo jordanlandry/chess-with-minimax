@@ -69,6 +69,8 @@ export default function getAvailableMoves(board: string[][], piece: string, x: n
         break;
       } else break;
     }
+
+    // TODO Castling
   }
 
   // ~~~ KNIGHT ~~~ \\
@@ -112,8 +114,6 @@ export default function getAvailableMoves(board: string[][], piece: string, x: n
     if (board[y + 1] && board[y + 1][x + 2] !== undefined) {
       if (board[y + 1][x + 2] === "" || getColor(board[y + 1][x + 2]) !== currentColor) tryMove(x + 2, y + 1);
     }
-
-    // TODO Castling
   }
 
   // ~~~ BISHOP ~~~ \\
