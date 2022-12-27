@@ -20,6 +20,7 @@ export default function Chess() {
   const [selectedPiece, setSelectedPiece] = useState<PositionType>();
   const [availableMoves, setAvailableMoves] = useState<PositionType[]>([]);
   const [whosTurn, setWhosTurn] = useState<0 | 1>(0); // 0 = white, 1 = black
+  const [timeToCompleteAIMove, setTimeToCompleteAIMove] = useState<number>(0);
 
   // ~~~ REFS ~~~ \\
   const boardRef = useRef<HTMLDivElement>(null);
@@ -45,10 +46,6 @@ export default function Chess() {
     setSquareElements(squareElements);
   }, [availableMoves]);
 
-  useEffect(() => {
-    console.log(getAllMoves(board, 1));
-  }, [board]);
-
   // ~~~ HANDLE AI MOVES ~~~ \\
   useEffect(() => {
     // If it's not the AI's turn, return
@@ -61,6 +58,8 @@ export default function Chess() {
 
     // Switch turns
     setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
+
+    setTimeToCompleteAIMove(move.timeToComplete ? move.timeToComplete : 0);
   }, [whosTurn]);
 
   // ~~~ AVAILABLE MOVES ~~~ \\
@@ -148,6 +147,11 @@ export default function Chess() {
     >
       {pieceElements}
       {squareElements}
+      <div style={{ gridColumn: "1 / -1", textAlign: "center" }}>
+        {whosTurn === 0 ? "White's turn" : "Black's turn"}
+        <br />
+        {timeToCompleteAIMove > 0 ? `AI took ${timeToCompleteAIMove}ms to think` : null}
+      </div>
     </div>
   );
 }

@@ -2,15 +2,19 @@ import { useEffect } from "react";
 import getAvailableMoves from "./getAvailableMoves";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-let calculations = 0;
+
 export function getBestMove(board: string[][]) {
-  calculations = 0;
+  const startTime = Date.now();
+
   const initialBoard = board.map((row) => [...row]);
   const newBoard = initialBoard.map((row) => [...row]);
 
-  const bestMove = minimax(newBoard, 4, false, -Infinity, Infinity);
+  const bestMove = minimax(newBoard, 5, false, -Infinity, Infinity);
 
-  // console.log(calculations);
+  const endTime = Date.now();
+
+  bestMove.timeToComplete = endTime - startTime;
+
   return bestMove;
 }
 
@@ -51,11 +55,11 @@ interface Move {
 }
 interface MinimaxMove extends Move {
   score: number;
+  timeToComplete?: number;
 }
 
 // Minimax
 export function minimax(board: string[][], depth: number, isMaximizing: boolean, alpha: number, beta: number) {
-  calculations++;
   let bestMove: MinimaxMove = {
     from: { x: -1, y: -1 },
     to: { x: -1, y: -1 },
@@ -101,10 +105,10 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
       }
 
       // Update alpha
-      // alpha = Math.max(alpha, bestScore);
+      alpha = Math.max(alpha, bestScore);
 
       // Check if we can prune
-      // if (beta <= alpha) break;
+      if (beta <= alpha) break;
     }
 
     return bestMove;
@@ -142,10 +146,10 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
       }
 
       // Update alpha
-      // beta = Math.min(beta, bestScore);
+      beta = Math.min(beta, bestScore);
 
       // Check if we can prune
-      // if (beta <= alpha) break;
+      if (beta <= alpha) break;
     }
 
     return bestMove;
