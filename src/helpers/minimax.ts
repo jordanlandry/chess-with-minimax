@@ -1,11 +1,16 @@
+import { useEffect } from "react";
 import getAvailableMoves from "./getAvailableMoves";
 
-export function makeMove(board: string[][]) {
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+let calculations = 0;
+export function getBestMove(board: string[][]) {
+  calculations = 0;
   const initialBoard = board.map((row) => [...row]);
   const newBoard = initialBoard.map((row) => [...row]);
 
-  const bestMove = minimax(newBoard, 1, false, -Infinity, Infinity);
+  const bestMove = minimax(newBoard, 4, false, -Infinity, Infinity);
 
+  // console.log(calculations);
   return bestMove;
 }
 
@@ -50,6 +55,7 @@ interface MinimaxMove extends Move {
 
 // Minimax
 export function minimax(board: string[][], depth: number, isMaximizing: boolean, alpha: number, beta: number) {
+  calculations++;
   let bestMove: MinimaxMove = {
     from: { x: -1, y: -1 },
     to: { x: -1, y: -1 },
@@ -72,26 +78,30 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
     // Go through all the moves
     for (let i = 0; i < allMoves.length; i++) {
       const move = allMoves[i];
+      // Copy the board
+      const newBoard = board.map((row) => [...row]);
 
       // Make the move
       board[move.to.y][move.to.x] = move.piece;
       board[move.from.y][move.from.x] = "";
 
       // Get the score
-      const nextMove = minimax(board, depth - 1, false, alpha, beta);
+      const nextEval = minimax(board, depth - 1, false, alpha, beta);
 
       // Undo the move
-      board[move.to.y][move.to.x] = "";
-      board[move.from.y][move.from.x] = move.piece;
+      board = newBoard.map((row) => [...row]);
+
+      // board[move.to.y][move.to.x] = "";
+      // board[move.from.y][move.from.x] = move.piece;
 
       // Update the best score
-      if (nextMove!.score > bestScore) {
-        bestScore = nextMove!.score;
+      if (nextEval!.score > bestScore) {
+        bestScore = nextEval!.score;
         bestMove = { ...move, score: bestScore };
       }
 
       // Update alpha
-      alpha = Math.max(alpha, bestScore);
+      // alpha = Math.max(alpha, bestScore);
 
       // Check if we can prune
       // if (beta <= alpha) break;
@@ -110,6 +120,9 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
     for (let i = 0; i < allMoves.length; i++) {
       const move = allMoves[i];
 
+      // Copy the board
+      const newBoard = board.map((row) => [...row]);
+
       // Make the move
       board[move.to.y][move.to.x] = move.piece;
       board[move.from.y][move.from.x] = "";
@@ -118,8 +131,9 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
       const nextMove = minimax(board, depth - 1, true, alpha, beta);
 
       // Undo the move
-      board[move.to.y][move.to.x] = "";
-      board[move.from.y][move.from.x] = move.piece;
+      board = newBoard.map((row) => [...row]);
+      // board[move.to.y][move.to.x] = "";
+      // board[move.from.y][move.from.x] = move.piece;
 
       // Update the best score
       if (nextMove!.score < bestScore) {
@@ -128,7 +142,7 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
       }
 
       // Update alpha
-      alpha = Math.max(alpha, bestScore);
+      // beta = Math.min(beta, bestScore);
 
       // Check if we can prune
       // if (beta <= alpha) break;
@@ -138,7 +152,7 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
   }
 }
 
-function getAllMoves(board: string[][], player: number) {
+export function getAllMoves(board: string[][], player: number) {
   const allAvailebleMoves: Move[] = [];
 
   for (let i = 0; i < board.length; i++) {

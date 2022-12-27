@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { PositionType, PieceType } from "../data/interfaces";
+import { PieceType, PositionType } from "../data/interfaces";
 import { BOARD_SIZE, colors, STARTING_POSITION } from "../data/properties";
 import getAvailableMoves from "../helpers/getAvailableMoves";
-import { makeMove } from "../helpers/minimax";
+import { getAllMoves, getBestMove } from "../helpers/minimax";
 import nextId from "../helpers/nextId";
 import useKeybind from "../hooks/useKeybind";
 import useWidth from "../hooks/useWidth";
@@ -45,20 +45,19 @@ export default function Chess() {
     setSquareElements(squareElements);
   }, [availableMoves]);
 
+  useEffect(() => {
+    console.log(getAllMoves(board, 1));
+  }, [board]);
+
   // ~~~ HANDLE AI MOVES ~~~ \\
   useEffect(() => {
     // If it's not the AI's turn, return
     if (whosTurn === 0) return;
 
-    const move = makeMove(board);
+    const move = getBestMove(board);
     if (move.from.x === -1) return;
 
-    const newBoard = [...board];
-    newBoard[move.to.y][move.to.x] = board[move.from.y][move.from.x];
-    newBoard[move.from.y][move.from.x] = "";
-
-    // Update state
-    setBoard(newBoard);
+    moveFrom(move.from.x, move.from.y, move.to.x, move.to.y);
 
     // Switch turns
     setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
@@ -108,7 +107,6 @@ export default function Chess() {
         setBoard(newBoard);
         setSelectedPiece(undefined);
         setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
-        return;
       }
     }
 
