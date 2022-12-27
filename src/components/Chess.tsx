@@ -41,6 +41,8 @@ export default function Chess() {
       }
     }
 
+    console.log(board);
+
     setSquareElements(squareElements);
   }, [availableMoves]);
 

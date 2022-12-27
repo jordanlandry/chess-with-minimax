@@ -3,6 +3,7 @@ export default function Piece({ x, y, team, type, width, setSelectedPiece, id, o
 
   return (
     <img
+      className="piece"
       onClick={() => onClick({ x, y, team, type })}
       alt={type}
       src={img}

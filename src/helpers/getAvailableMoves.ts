@@ -3,100 +3,68 @@ import { PositionType } from "../data/interfaces";
 export default function getAvailableMoves(board: string[][], piece: string, x: number, y: number) {
   const availableMoves: any = [];
 
+  const currentColor = piece === piece.toUpperCase() ? "white" : "black";
+
   // ~~~ WHITE PAWN ~~~ \\
   if (piece === "p") {
     if (y === 0) return availableMoves;
 
-    // Normal Move
-    if (board[y - 1][x] === "") tryMove(x, y - 1);
+    if (y === 6 && board[y - 2][x] === "") tryMove(x, y - 2); // First move
+    if (board[y - 1][x] === "") tryMove(x, y - 1); // Move Forward
+    if (board[y - 1][x + 1] && getColor(board[y - 1][x + 1])) tryMove(x + 1, y - 1); // Capture right
+    if (board[y - 1][x - 1] && getColor(board[y - 1][x - 1])) tryMove(x - 1, y - 1); // Capture Left
 
-    // First Move
-    if (y === 6 && board[y - 2][x] === "" && board[y - 1][x] === "") tryMove(x, y - 2);
-
-    // Take Right
-    if (
-      board[y - 1][x + 1] !== "" &&
-      board[y - 1][x + 1] !== undefined &&
-      board[y - 1][x + 1].toUpperCase() === board[y - 1][x + 1]
-    )
-      tryMove(x + 1, y - 1);
-
-    // Take Left
-    if (
-      board[y - 1][x - 1] !== "" &&
-      board[y - 1][x - 1] !== undefined &&
-      board[y - 1][x - 1].toUpperCase() === board[y - 1][x - 1]
-    )
-      tryMove(x - 1, y - 1);
-
-    // TODO En Passant
+    // TODO En passant
+    // TODO Promotion
   }
 
   // ~~~ BLACK PAWN ~~~ \\
   if (piece === "P") {
     if (y === 7) return availableMoves;
 
-    // Normal Move
-    if (board[y + 1][x] === "") tryMove(x, y + 1);
+    if (y === 1 && board[y + 2][x] === "") tryMove(x, y + 2); // First move
+    if (board[y + 1][x] === "") tryMove(x, y + 1); // Move Forward
 
-    // First Move
-    if (y === 1 && board[y + 2][x] === "" && board[y + 1][x] === "") tryMove(x, y + 2);
+    if (board[y + 1][x + 1] && getColor(board[y + 1][x + 1])) tryMove(x + 1, y + 1); // Capture right
+    if (board[y + 1][x - 1] && getColor(board[y + 1][x - 1])) tryMove(x - 1, y + 1); // Capture Left
 
-    // Take Right
-    if (
-      board[y + 1][x + 1] !== "" &&
-      board[y + 1][x + 1] !== undefined &&
-      board[y + 1][x + 1].toLowerCase() === board[y + 1][x + 1]
-    )
-      tryMove(x + 1, y + 1);
-
-    // Take Left
-    if (
-      board[y + 1][x - 1] !== "" &&
-      board[y + 1][x - 1] !== undefined &&
-      board[y + 1][x - 1].toLowerCase() === board[y + 1][x - 1]
-    )
-      tryMove(x - 1, y + 1);
-
-    // TODO En Passant
+    // TODO En passant
+    // TODO Promotion
   }
 
-  // The rest of the pieces are the same for both teams so we can just lowercase the piece
-  piece = piece.toLowerCase();
-
   // ~~~ ROOK ~~~ \\
-  if (piece === "r") {
-    // Up
+  if (piece === "r" || piece === "R" || piece === "q" || piece === "Q") {
+    // Move Up
     for (let i = y - 1; i >= 0; i--) {
       if (board[i][x] === "") tryMove(x, i);
-      else if (board[i][x].toUpperCase() === board[i][x]) {
-        tryMove(i, y);
+      else if (getColor(board[i][x]) !== currentColor) {
+        tryMove(x, i);
         break;
       } else break;
     }
 
-    // Down
-    for (let i = y + 1; i < 8; i++) {
+    // Move Down
+    for (let i = y + 1; i <= 7; i++) {
       if (board[i][x] === "") tryMove(x, i);
-      else if (board[i][x].toUpperCase() === board[i][x]) {
-        tryMove(i, y);
+      else if (getColor(board[i][x]) !== currentColor) {
+        tryMove(x, i);
         break;
       } else break;
     }
 
-    // Left
+    // Move Left
     for (let i = x - 1; i >= 0; i--) {
-      if (board[y][i] === "") availableMoves.push({ x: i, y });
-      else if (board[y][i].toUpperCase() === board[y][i]) {
+      if (board[y][i] === "") tryMove(i, y);
+      else if (getColor(board[y][i]) !== currentColor) {
         tryMove(i, y);
         break;
       } else break;
     }
 
-    // Right
-    for (let i = x + 1; i < 8; i++) {
+    // Move Right
+    for (let i = x + 1; i <= 7; i++) {
       if (board[y][i] === "") tryMove(i, y);
-      else if (board[y][i].toUpperCase() === board[y][i]) {
+      else if (getColor(board[y][i]) !== currentColor) {
         tryMove(i, y);
         break;
       } else break;
@@ -104,96 +72,89 @@ export default function getAvailableMoves(board: string[][], piece: string, x: n
   }
 
   // ~~~ KNIGHT ~~~ \\
-  if (piece === "n") {
-    // Up Left
-    if (board[y - 2] !== undefined && board[y - 2][x - 1] !== undefined) {
-      if (board[y - 2][x - 1] === "" || board[y - 2][x - 1].toUpperCase() === board[y - 2][x - 1])
-        tryMove(x - 1, y - 2);
+  if (piece === "n" || piece === "N") {
+    // Top Left
+    if (board[y - 2] && board[y - 2][x - 1] !== undefined) {
+      if (board[y - 2][x - 1] === "" || getColor(board[y - 2][x - 1]) !== currentColor) tryMove(x - 1, y - 2);
     }
 
-    // Up Right
-    if (board[y - 2] !== undefined && board[y - 2][x + 1] !== undefined) {
-      if (board[y - 2][x + 1] === "" || board[y - 2][x + 1].toUpperCase() === board[y - 2][x + 1])
-        tryMove(x + 1, y - 2);
+    // Top Right
+    if (board[y - 2] && board[y - 2][x + 1] !== undefined) {
+      if (board[y - 2][x + 1] === "" || getColor(board[y - 2][x + 1]) !== currentColor) tryMove(x + 1, y - 2);
     }
 
-    // Down Left
-    if (board[y + 2] !== undefined && board[y + 2][x - 1] !== undefined) {
-      if (board[y + 2][x - 1] === "" || board[y + 2][x - 1].toUpperCase() === board[y + 2][x - 1])
-        tryMove(x - 1, y + 2);
+    // Bottom Left
+    if (board[y + 2] && board[y + 2][x - 1] !== undefined) {
+      if (board[y + 2][x - 1] === "" || getColor(board[y + 2][x - 1]) !== currentColor) tryMove(x - 1, y + 2);
     }
 
-    // Down Right
-    if (board[y + 2] !== undefined && board[y + 2][x + 1] !== undefined) {
-      if (board[y + 2][x + 1] === "" || board[y + 2][x + 1].toUpperCase() === board[y + 2][x + 1])
-        tryMove(x + 1, y + 2);
+    // Bottom Right
+    if (board[y + 2] && board[y + 2][x + 1] !== undefined) {
+      if (board[y + 2][x + 1] === "" || getColor(board[y + 2][x + 1]) !== currentColor) tryMove(x + 1, y + 2);
     }
 
-    // Left Up
-    if (board[y - 1] !== undefined && board[y - 1][x - 2] !== undefined) {
-      if (board[y - 1][x - 2] === "" || board[y - 1][x - 2].toUpperCase() === board[y - 1][x - 2])
-        tryMove(x - 2, y - 1);
+    // Left Top
+    if (board[y - 1] && board[y - 1][x - 2] !== undefined) {
+      if (board[y - 1][x - 2] === "" || getColor(board[y - 1][x - 2]) !== currentColor) tryMove(x - 2, y - 1);
     }
 
-    // Left Down
-    if (board[y + 1] !== undefined && board[y + 1][x - 2] !== undefined) {
-      if (board[y + 1][x - 2] === "" || board[y + 1][x - 2].toUpperCase() === board[y + 1][x - 2])
-        tryMove(x - 2, y + 1);
+    // Left Bottom
+    if (board[y + 1] && board[y + 1][x - 2] !== undefined) {
+      if (board[y + 1][x - 2] === "" || getColor(board[y + 1][x - 2]) !== currentColor) tryMove(x - 2, y + 1);
     }
 
-    // Right Up
-    if (board[y - 1] !== undefined && board[y - 1][x + 2] !== undefined) {
-      if (board[y - 1][x + 2] === "" || board[y - 1][x + 2].toUpperCase() === board[y - 1][x + 2])
-        tryMove(x + 2, y - 1);
+    // Right Top
+    if (board[y - 1] && board[y - 1][x + 2] !== undefined) {
+      if (board[y - 1][x + 2] === "" || getColor(board[y - 1][x + 2]) !== currentColor) tryMove(x + 2, y - 1);
     }
 
-    // Right Down
-    if (board[y + 1] !== undefined && board[y + 1][x + 2] !== undefined) {
-      if (board[y + 1][x + 2] === "" || board[y + 1][x + 2].toUpperCase() === board[y + 1][x + 2])
-        tryMove(x + 2, y + 1);
+    // Right Bottom
+    if (board[y + 1] && board[y + 1][x + 2] !== undefined) {
+      if (board[y + 1][x + 2] === "" || getColor(board[y + 1][x + 2]) !== currentColor) tryMove(x + 2, y + 1);
     }
+
+    // TODO Castling
   }
 
   // ~~~ BISHOP ~~~ \\
-  if (piece === "b") {
-    // Up Left
-    for (let i = 1; i < 8; i++) {
-      if (board[y - i] !== undefined && board[y - i][x - i] !== undefined) {
-        if (board[y - i][x - i] === "") availableMoves.push({ x: x - i, y: y - i });
-        else if (board[y - i][x - i].toUpperCase() === board[y - i][x - i]) {
+  if (piece === "b" || piece === "B" || piece === "q" || piece === "Q") {
+    // Top Left
+    for (let i = 1; i <= 7; i++) {
+      if (board[y - i] && board[y - i][x - i] !== undefined) {
+        if (board[y - i][x - i] === "") tryMove(x - i, y - i);
+        else if (getColor(board[y - i][x - i]) !== currentColor) {
           tryMove(x - i, y - i);
           break;
         } else break;
       } else break;
     }
 
-    // Up Right
-    for (let i = 1; i < 8; i++) {
-      if (board[y - i] !== undefined && board[y - i][x + i] !== undefined) {
-        if (board[y - i][x + i] === "") availableMoves.push({ x: x + i, y: y - i });
-        else if (board[y - i][x + i].toUpperCase() === board[y - i][x + i]) {
+    // Top Right
+    for (let i = 1; i <= 7; i++) {
+      if (board[y - i] && board[y - i][x + i] !== undefined) {
+        if (board[y - i][x + i] === "") tryMove(x + i, y - i);
+        else if (getColor(board[y - i][x + i]) !== currentColor) {
           tryMove(x + i, y - i);
           break;
         } else break;
       } else break;
     }
-
-    // Down Left
-    for (let i = 1; i < 8; i++) {
-      if (board[y + i] !== undefined && board[y + i][x - i] !== undefined) {
-        if (board[y + i][x - i] === "") availableMoves.push({ x: x - i, y: y + i });
-        else if (board[y + i][x - i].toUpperCase() === board[y + i][x - i]) {
+    // Bottom Left
+    for (let i = 1; i <= 7; i++) {
+      if (board[y + i] && board[y + i][x - i] !== undefined) {
+        if (board[y + i][x - i] === "") tryMove(x - i, y + i);
+        else if (getColor(board[y + i][x - i]) !== currentColor) {
           tryMove(x - i, y + i);
           break;
         } else break;
       } else break;
     }
 
-    // Down Right
-    for (let i = 1; i < 8; i++) {
-      if (board[y + i] !== undefined && board[y + i][x + i] !== undefined) {
-        if (board[y + i][x + i] === "") availableMoves.push({ x: x + i, y: y + i });
-        else if (board[y + i][x + i].toUpperCase() === board[y + i][x + i]) {
+    // Bottom Right
+    for (let i = 1; i <= 7; i++) {
+      if (board[y + i] && board[y + i][x + i] !== undefined) {
+        if (board[y + i][x + i] === "") tryMove(x + i, y + i);
+        else if (getColor(board[y + i][x + i]) !== currentColor) {
           tryMove(x + i, y + i);
           break;
         } else break;
@@ -201,12 +162,60 @@ export default function getAvailableMoves(board: string[][], piece: string, x: n
     }
   }
 
+  // ~~~ KING ~~~ \\
+  if (piece === "k" || piece === "K") {
+    // Top
+    if (board[y - 1] && board[y - 1][x] !== undefined) {
+      if (board[y - 1][x] === "" || getColor(board[y - 1][x]) !== currentColor) tryMove(x, y - 1);
+    }
+
+    // Bottom
+    if (board[y + 1] && board[y + 1][x] !== undefined) {
+      if (board[y + 1][x] === "" || getColor(board[y + 1][x]) !== currentColor) tryMove(x, y + 1);
+    }
+
+    // Left
+    if (board[y] && board[y][x - 1] !== undefined) {
+      if (board[y][x - 1] === "" || getColor(board[y][x - 1]) !== currentColor) tryMove(x - 1, y);
+    }
+
+    // Right
+    if (board[y] && board[y][x + 1] !== undefined) {
+      if (board[y][x + 1] === "" || getColor(board[y][x + 1]) !== currentColor) tryMove(x + 1, y);
+    }
+
+    // Top Left
+    if (board[y - 1] && board[y - 1][x - 1] !== undefined) {
+      if (board[y - 1][x - 1] === "" || getColor(board[y - 1][x - 1]) !== currentColor) tryMove(x - 1, y - 1);
+    }
+
+    // Top Right
+    if (board[y - 1] && board[y - 1][x + 1] !== undefined) {
+      if (board[y - 1][x + 1] === "" || getColor(board[y - 1][x + 1]) !== currentColor) tryMove(x + 1, y - 1);
+    }
+
+    // Bottom Left
+    if (board[y + 1] && board[y + 1][x - 1] !== undefined) {
+      if (board[y + 1][x - 1] === "" || getColor(board[y + 1][x - 1]) !== currentColor) tryMove(x - 1, y + 1);
+    }
+
+    // Bottom Right
+    if (board[y + 1] && board[y + 1][x + 1] !== undefined) {
+      if (board[y + 1][x + 1] === "" || getColor(board[y + 1][x + 1]) !== currentColor) tryMove(x + 1, y + 1);
+    }
+
+    // TODO Castling
+  }
+
   // Check if the move will result in a check for the player who's turn it is if not, push the move to the array
   function tryMove(x: number, y: number) {
-    // TODO
+    // TODO Check if the move will result in a check for the player who's turn it is
     availableMoves.push({ x, y });
   }
 
-  // piece = piece.toLowerCase();
+  function getColor(piece: string) {
+    return piece === piece.toUpperCase() ? "white" : "black";
+  }
+
   return availableMoves;
 }
