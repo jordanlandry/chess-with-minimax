@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
 import Chess from "./components/Chess";
-import { game } from "./components/test";
 
+export const PieceStyleContext = createContext("wood");
 function App() {
-  // game();
+  const [pieceStyle, setPieceStyle] = useState("wood");
+
   return (
-    <div className="App">
-      <Chess />
-    </div>
+    <PieceStyleContext.Provider value={pieceStyle}>
+      <div className="App">
+        <Chess />
+      </div>
+    </PieceStyleContext.Provider>
   );
 }
 

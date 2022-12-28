@@ -45,7 +45,7 @@ export function getBestMove(board: string[][]) {
   const initialBoard = board.map((row) => [...row]);
   const newBoard = initialBoard.map((row) => [...row]);
 
-  const bestMove = minimax(newBoard, 4, false, -Infinity, Infinity);
+  const bestMove = minimax(newBoard, 5, false, -Infinity, Infinity);
   const endTime = Date.now();
 
   bestMove.timeToComplete = endTime - startTime;

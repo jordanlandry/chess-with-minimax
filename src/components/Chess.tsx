@@ -67,22 +67,6 @@ export default function Chess() {
     setSquareElements(squareElements);
   }, [availableMoves]);
 
-  // ~~~ HANDLE AI MOVES ~~~ \\
-  useEffect(() => {
-    // If it's not the AI's turn, return
-    if (whosTurn === 0) return;
-
-    const move = getBestMove(board);
-    if (move.from.x === -1) return;
-
-    moveFrom(move.from.x, move.from.y, move.to.x, move.to.y);
-
-    // Switch turns
-    setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
-
-    setTimeToCompleteAIMove(move.timeToComplete ? move.timeToComplete : 0);
-  }, [whosTurn]);
-
   // ~~~ AVAILABLE MOVES ~~~ \\
   useEffect(() => {
     setAvailableMoves(
@@ -91,6 +75,24 @@ export default function Chess() {
         : []
     );
   }, [selectedPiece]);
+
+  // ~~~ HANDLE AI MOVES ~~~ \\
+  useEffect(() => {
+    setTimeout(() => {
+      // If it's not the AI's turn, return
+      if (whosTurn === 0) return;
+
+      const move = getBestMove(board);
+      if (move.from.x === -1) return;
+
+      moveFrom(move.from.x, move.from.y, move.to.x, move.to.y);
+
+      // Switch turns
+      setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
+
+      setTimeToCompleteAIMove(move.timeToComplete ? move.timeToComplete : 0);
+    }, 50);
+  }, [whosTurn]);
 
   // ~~~ ELEMENTS ~~~ \\
   const pieceElements = board.map((row, i) => {
@@ -118,12 +120,13 @@ export default function Chess() {
     // If the selected square is an available move, move the piece there
     for (let i = 0; i < availableMoves.length; i++) {
       if (availableMoves[i].x === x && availableMoves[i].y === y) {
-        const newBoard = [...board];
-        newBoard[y][x] = board[selectedPiece!.y][selectedPiece!.x];
-        newBoard[selectedPiece!.y][selectedPiece!.x] = "";
+        // const newBoard = [...board];
+        // newBoard[y][x] = board[selectedPiece!.y][selectedPiece!.x];
+        // newBoard[selectedPiece!.y][selectedPiece!.x] = "";
+        moveFrom(selectedPiece!.x, selectedPiece!.y, x, y);
 
         // Update state
-        setBoard(newBoard);
+        // setBoard(newBoard);
         setSelectedPiece(undefined);
         setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
       }
@@ -134,6 +137,13 @@ export default function Chess() {
   }
 
   function moveFrom(x1: number, y1: number, x2: number, y2: number) {
+    // Play audio
+    const audio =
+      board[y2][x2] === ""
+        ? new Audio("../../src/assets/sounds/move-self.mp3")
+        : new Audio("../../src/assets/sounds/capture.mp3");
+    audio.play();
+
     const newBoard = [...board];
     newBoard[y2][x2] = board[y1][x1];
     newBoard[y1][x1] = "";
@@ -167,7 +177,7 @@ export default function Chess() {
     >
       {pieceElements}
       {squareElements}
-      <div style={{ gridColumn: "1 / -1", textAlign: "center" }}>
+      <div style={{ gridColumn: "1 / -1", textAlign: "center", fontSize: "3rem" }}>
         {whosTurn === 0 ? "White's turn" : "Black's turn"}
         <br />
         {timeToCompleteAIMove > 0 ? `AI took ${timeToCompleteAIMove}ms to think` : null}
