@@ -3,18 +3,54 @@ import getAvailableMoves from "./getAvailableMoves";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const boardToFen = (board: string[][]) => {
+  let fen = "";
+
+  for (let i = 0; i < board.length; i++) {
+    let emptySquares = 0;
+
+    for (let j = 0; j < board[i].length; j++) {
+      if (board[i][j] === "") {
+        emptySquares++;
+      } else {
+        if (emptySquares > 0) {
+          fen += emptySquares;
+          emptySquares = 0;
+        }
+
+        fen += board[i][j];
+      }
+    }
+
+    if (emptySquares > 0) {
+      fen += emptySquares;
+      emptySquares = 0;
+    }
+
+    if (i < board.length - 1) fen += "/";
+  }
+
+  return fen;
+};
+
+interface MoveDatabase {
+  [key: string]: MinimaxMove;
+}
+
+// const transpositionTable: MoveDatabase = {};
+
 export function getBestMove(board: string[][]) {
   const startTime = Date.now();
 
   const initialBoard = board.map((row) => [...row]);
   const newBoard = initialBoard.map((row) => [...row]);
 
-  const bestMove = minimax(newBoard, 5, false, -Infinity, Infinity);
-
+  const bestMove = minimax(newBoard, 4, false, -Infinity, Infinity);
   const endTime = Date.now();
 
   bestMove.timeToComplete = endTime - startTime;
 
+  // console.log(transpositionTable);
   return bestMove;
 }
 
@@ -89,8 +125,13 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
       board[move.to.y][move.to.x] = move.piece;
       board[move.from.y][move.from.x] = "";
 
-      // Get the score
       const nextEval = minimax(board, depth - 1, false, alpha, beta);
+
+      // Get the score
+      // let nextEval = bestMove;
+      // Check if the move is in the transposition table
+      // if (transpositionTable[boardToFen(board)]) nextEval = transpositionTable[boardToFen(board)];
+      // else nextEval = minimax(board, depth - 1, false, alpha, beta);
 
       // Undo the move
       board = newBoard.map((row) => [...row]);
@@ -111,6 +152,8 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
       if (beta <= alpha) break;
     }
 
+    // Add the best move to the transposition table
+    // transpositionTable[boardToFen(board)] = bestMove;
     return bestMove;
   }
 
@@ -132,7 +175,13 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
       board[move.from.y][move.from.x] = "";
 
       // Get the score
-      const nextMove = minimax(board, depth - 1, true, alpha, beta);
+      // let nextEval = bestMove;
+
+      // Check if the move is in the transposition table
+      // if (transpositionTable[boardToFen(board)]) nextEval = transpositionTable[boardToFen(board)];
+      // else nextEval = minimax(board, depth - 1, false, alpha, beta);
+
+      const nextEval = minimax(board, depth - 1, true, alpha, beta);
 
       // Undo the move
       board = newBoard.map((row) => [...row]);
@@ -140,8 +189,8 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
       // board[move.from.y][move.from.x] = move.piece;
 
       // Update the best score
-      if (nextMove!.score < bestScore) {
-        bestScore = nextMove!.score;
+      if (nextEval!.score < bestScore) {
+        bestScore = nextEval!.score;
         bestMove = { ...move, score: bestScore };
       }
 
@@ -152,6 +201,8 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
       if (beta <= alpha) break;
     }
 
+    // Add the best move to the transposition table
+    // transpositionTable[boardToFen(board)] = bestMove;
     return bestMove;
   }
 }

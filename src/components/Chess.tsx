@@ -34,11 +34,32 @@ export default function Chess() {
       for (let j = 0; j < BOARD_SIZE; j++) {
         let color = (i + j) % 2 === 0 ? colors.light : colors.dark;
 
+        let isOvertakeSquare = false;
+        let isAvailableSquare = false;
+
         availableMoves.forEach((move: PositionType) => {
-          if (move.x === j && move.y === i) color = board[i][j] ? colors.overTake : colors.availableMove;
+          if (move.x === j && move.y === i) {
+            isAvailableSquare = true;
+            // Check if the square is an overtake square (if there is a piece on it that is not the same team as the selected piece)
+
+            if (board[i][j]) {
+              if (whosTurn === 0 && board[i][j].toLowerCase() !== board[i][j]) isOvertakeSquare = true;
+              else if (whosTurn === 1 && board[i][j].toUpperCase() !== board[i][j]) isOvertakeSquare = true;
+            }
+          }
         });
 
-        squareElements.push(<Square key={key} color={color} onClick={clickSquareToMove} x={i} y={j} />);
+        squareElements.push(
+          <Square
+            key={key}
+            color={color}
+            onClick={clickSquareToMove}
+            x={i}
+            y={j}
+            isOvertakeSquare={isOvertakeSquare}
+            isAvailableSquare={isAvailableSquare}
+          />
+        );
         key++;
       }
     }
@@ -85,7 +106,6 @@ export default function Chess() {
           width={boardRef.current?.offsetWidth || null}
           setSelectedPiece={setSelectedPiece}
           onClick={handlePieceClick}
-          // isSelected={selectedPiece === }
         />
       ) : null;
     });

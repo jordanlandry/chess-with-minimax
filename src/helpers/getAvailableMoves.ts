@@ -9,10 +9,10 @@ export default function getAvailableMoves(board: string[][], piece: string, x: n
   if (piece === "p") {
     if (y === 0) return availableMoves;
 
-    if (y === 6 && board[y - 2][x] === "") tryMove(x, y - 2); // First move
+    if (y === 6 && board[y - 2][x] === "" && board[y - 1][x] === "") tryMove(x, y - 2); // First move
     if (board[y - 1][x] === "") tryMove(x, y - 1); // Move Forward
-    if (board[y - 1][x + 1] && getColor(board[y - 1][x + 1])) tryMove(x + 1, y - 1); // Capture right
-    if (board[y - 1][x - 1] && getColor(board[y - 1][x - 1])) tryMove(x - 1, y - 1); // Capture Left
+    if (board[y - 1][x + 1] && getColor(board[y - 1][x + 1]) !== currentColor) tryMove(x + 1, y - 1); // Capture right
+    if (board[y - 1][x - 1] && getColor(board[y - 1][x - 1]) !== currentColor) tryMove(x - 1, y - 1); // Capture Left
 
     // TODO En passant
     // TODO Promotion
@@ -22,11 +22,11 @@ export default function getAvailableMoves(board: string[][], piece: string, x: n
   if (piece === "P") {
     if (y === 7) return availableMoves;
 
-    if (y === 1 && board[y + 2][x] === "") tryMove(x, y + 2); // First move
+    if (y === 1 && board[y + 2][x] === "" && board[y + 1][x] === "") tryMove(x, y + 2); // First move
     if (board[y + 1][x] === "") tryMove(x, y + 1); // Move Forward
 
-    if (board[y + 1][x + 1] && getColor(board[y + 1][x + 1])) tryMove(x + 1, y + 1); // Capture right
-    if (board[y + 1][x - 1] && getColor(board[y + 1][x - 1])) tryMove(x - 1, y + 1); // Capture Left
+    if (board[y + 1][x + 1] && getColor(board[y + 1][x + 1]) !== currentColor) tryMove(x + 1, y + 1); // Capture right
+    if (board[y + 1][x - 1] && getColor(board[y + 1][x - 1]) !== currentColor) tryMove(x - 1, y + 1); // Capture Left
 
     // TODO En passant
     // TODO Promotion
