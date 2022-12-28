@@ -3,7 +3,7 @@ import { PieceStyleContext } from "../App";
 
 export default function Piece({ x, y, team, type, width, onClick }: any) {
   const style = useContext(PieceStyleContext);
-  const img = "/assets/images/styles/" + style + "/" + type + team + ".png";
+  const img = "./assets/images/styles/" + style + "/" + type + team + ".png";
 
   const animationTime = 1000; // ms
 

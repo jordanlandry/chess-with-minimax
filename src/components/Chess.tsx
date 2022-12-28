@@ -150,9 +150,7 @@ export default function Chess() {
   function moveFrom(x1: number, y1: number, x2: number, y2: number) {
     // Play audio
     const audio =
-      board[y2][x2] === ""
-        ? new Audio("../../src/assets/sounds/move-self.mp3")
-        : new Audio("../../src/assets/sounds/capture.mp3");
+      board[y2][x2] === "" ? new Audio("./assets/sounds/move-self.mp3") : new Audio("./assets/sounds/capture.mp3");
     audio.play();
 
     const newBoard = [...board];
