@@ -4,6 +4,8 @@ import { BOARD_SIZE, colors, STARTING_POSITION } from "../data/properties";
 import getAvailableMoves from "../helpers/getAvailableMoves";
 import { getAllMoves, getBestMove } from "../helpers/minimax";
 import nextId from "../helpers/nextId";
+import numberOfPieces from "../helpers/numberOfPieces";
+import openings from "../helpers/openings";
 import useKeybind from "../hooks/useKeybind";
 import useWidth from "../hooks/useWidth";
 import Piece from "./Piece";
@@ -20,7 +22,15 @@ export default function Chess() {
   const [selectedPiece, setSelectedPiece] = useState<PositionType>();
   const [availableMoves, setAvailableMoves] = useState<PositionType[]>([]);
   const [whosTurn, setWhosTurn] = useState<0 | 1>(0); // 0 = white, 1 = black
+
+  // MINIMAX STATES
   const [timeToCompleteAIMove, setTimeToCompleteAIMove] = useState<number>(0);
+  const [depth, setDepth] = useState(7);
+  const [score, setScore] = useState(0);
+  const [checkCount, setCheckCount] = useState(0);
+
+  const [boardHistory, setBoardHistory] = useState([STARTING_POSITION]);
+  const [boardHistoryIndex, setBoardHistoryIndex] = useState(0);
 
   // ~~~ REFS ~~~ \\
   const boardRef = useRef<HTMLDivElement>(null);
@@ -78,19 +88,25 @@ export default function Chess() {
 
   // ~~~ HANDLE AI MOVES ~~~ \\
   useEffect(() => {
-    setTimeout(() => {
-      // If it's not the AI's turn, return
-      if (whosTurn === 0) return;
+    // If it's not the AI's turn, return
+    if (whosTurn === 0) return;
 
-      const move = getBestMove(board);
+    // Timeout because the board needs to update before the AI can make a move
+    setTimeout(() => {
+      const move = getBestMove(board, depth);
+
       if (move.from.x === -1) return;
 
+      // Check Openings
+      openings(board);
       moveFrom(move.from.x, move.from.y, move.to.x, move.to.y);
 
       // Switch turns
       setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
 
       setTimeToCompleteAIMove(move.timeToComplete ? move.timeToComplete : 0);
+      setScore(move.score ? move.score : 0);
+      setCheckCount(move.checkCount ? move.checkCount : 0);
     }, 50);
   }, [whosTurn]);
 
@@ -120,13 +136,8 @@ export default function Chess() {
     // If the selected square is an available move, move the piece there
     for (let i = 0; i < availableMoves.length; i++) {
       if (availableMoves[i].x === x && availableMoves[i].y === y) {
-        // const newBoard = [...board];
-        // newBoard[y][x] = board[selectedPiece!.y][selectedPiece!.x];
-        // newBoard[selectedPiece!.y][selectedPiece!.x] = "";
         moveFrom(selectedPiece!.x, selectedPiece!.y, x, y);
 
-        // Update state
-        // setBoard(newBoard);
         setSelectedPiece(undefined);
         setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
       }
@@ -149,6 +160,15 @@ export default function Chess() {
     newBoard[y1][x1] = "";
     setBoard(newBoard);
     setSelectedPiece(undefined);
+
+    // With less pieces on the board, the AI will be able to search deeper
+    // setDepth(Math.round(100 / numberOfPieces(board)));
+
+    // Add to history
+    // setBoardHistory((boardHistory) => [...boardHistory, newBoard]);
+
+    // // Set the index to the last item in the array
+    // setBoardHistoryIndex(boardHistory.length);
   }
 
   function handlePieceClick(piece: PieceType) {
@@ -180,8 +200,19 @@ export default function Chess() {
       <div style={{ gridColumn: "1 / -1", textAlign: "center", fontSize: "3rem" }}>
         {whosTurn === 0 ? "White's turn" : "Black's turn"}
         <br />
+        Score: {score}
+        <br />
+        Checks: {checkCount.toLocaleString()}
+        <br />
+        Depth: {depth}
+        {/* <button onClick={() => setDepth((depth) => depth - 1)}>-</button>
+        <button onClick={() => setDepth((depth) => depth + 1)}>+</button> */}
+        <br />
         {timeToCompleteAIMove > 0 ? `AI took ${timeToCompleteAIMove}ms to think` : null}
       </div>
     </div>
   );
+}
+function getNumberOfPieces(board: string[][]) {
+  throw new Error("Function not implemented.");
 }

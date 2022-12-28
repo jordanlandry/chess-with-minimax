@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import getAvailableMoves from "./getAvailableMoves";
+import orderMoves from "./orderMoves";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -39,22 +40,28 @@ interface MoveDatabase {
 
 // const transpositionTable: MoveDatabase = {};
 
-export function getBestMove(board: string[][]) {
+let checkCount = 0;
+
+const transpositionTable = {};
+
+export function getBestMove(board: string[][], depth: number) {
+  checkCount = 0;
   const startTime = Date.now();
 
   const initialBoard = board.map((row) => [...row]);
   const newBoard = initialBoard.map((row) => [...row]);
 
-  const bestMove = minimax(newBoard, 5, false, -Infinity, Infinity);
+  const bestMove = minimax(newBoard, depth, false, -Infinity, Infinity);
   const endTime = Date.now();
 
   bestMove.timeToComplete = endTime - startTime;
+  bestMove.checkCount = checkCount;
 
   // console.log(transpositionTable);
   return bestMove;
 }
 
-const pieceValues = {
+export const pieceValues = {
   p: 1,
   n: 3,
   b: 3,
@@ -89,9 +96,11 @@ interface Move {
   to: { x: number; y: number };
   piece: string;
 }
+
 interface MinimaxMove extends Move {
   score: number;
   timeToComplete?: number;
+  checkCount?: number;
 }
 
 // Minimax
@@ -111,12 +120,13 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
 
   // White is maximizing
   if (isMaximizing) {
-    const allMoves = getAllMoves(board, 0);
+    const allMoves = orderMoves(board, getAllMoves(board, 0), true);
 
     let bestScore = -Infinity;
 
     // Go through all the moves
     for (let i = 0; i < allMoves.length; i++) {
+      checkCount++;
       const move = allMoves[i];
       // Copy the board
       const newBoard = board.map((row) => [...row]);
@@ -127,17 +137,8 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
 
       const nextEval = minimax(board, depth - 1, false, alpha, beta);
 
-      // Get the score
-      // let nextEval = bestMove;
-      // Check if the move is in the transposition table
-      // if (transpositionTable[boardToFen(board)]) nextEval = transpositionTable[boardToFen(board)];
-      // else nextEval = minimax(board, depth - 1, false, alpha, beta);
-
       // Undo the move
       board = newBoard.map((row) => [...row]);
-
-      // board[move.to.y][move.to.x] = "";
-      // board[move.from.y][move.from.x] = move.piece;
 
       // Update the best score
       if (nextEval!.score > bestScore) {
@@ -152,19 +153,18 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
       if (beta <= alpha) break;
     }
 
-    // Add the best move to the transposition table
-    // transpositionTable[boardToFen(board)] = bestMove;
     return bestMove;
   }
 
   // Black is minimizing
   else {
-    const allMoves = getAllMoves(board, 1);
+    const allMoves = orderMoves(board, getAllMoves(board, 1), false);
 
     let bestScore = Infinity;
 
     // Go through all the moves
     for (let i = 0; i < allMoves.length; i++) {
+      checkCount++;
       const move = allMoves[i];
 
       // Copy the board
@@ -174,19 +174,10 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
       board[move.to.y][move.to.x] = move.piece;
       board[move.from.y][move.from.x] = "";
 
-      // Get the score
-      // let nextEval = bestMove;
-
-      // Check if the move is in the transposition table
-      // if (transpositionTable[boardToFen(board)]) nextEval = transpositionTable[boardToFen(board)];
-      // else nextEval = minimax(board, depth - 1, false, alpha, beta);
-
       const nextEval = minimax(board, depth - 1, true, alpha, beta);
 
       // Undo the move
       board = newBoard.map((row) => [...row]);
-      // board[move.to.y][move.to.x] = "";
-      // board[move.from.y][move.from.x] = move.piece;
 
       // Update the best score
       if (nextEval!.score < bestScore) {
@@ -200,9 +191,6 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
       // Check if we can prune
       if (beta <= alpha) break;
     }
-
-    // Add the best move to the transposition table
-    // transpositionTable[boardToFen(board)] = bestMove;
     return bestMove;
   }
 }
