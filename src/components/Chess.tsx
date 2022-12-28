@@ -205,8 +205,8 @@ export default function Chess() {
         Checks: {checkCount.toLocaleString()}
         <br />
         Depth: {depth}
-        {/* <button onClick={() => setDepth((depth) => depth - 1)}>-</button>
-        <button onClick={() => setDepth((depth) => depth + 1)}>+</button> */}
+        <button onClick={() => setDepth((depth) => depth - 1)}>-</button>
+        <button onClick={() => setDepth((depth) => depth + 1)}>+</button>
         <br />
         {timeToCompleteAIMove > 0 ? `AI took ${timeToCompleteAIMove}ms to think` : null}
       </div>
