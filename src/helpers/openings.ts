@@ -1,44 +1,36 @@
+import boardToFen from "./boardToFen";
+
 export default function openings(board: string[][]) {
-  for (const opening in OPENINGS) {
-    console.log(opening);
-  }
+  const fen = boardToFen(board);
+
+  // @ts-ignore
+  if (OPENINGS[fen]) return OPENINGS[fen].responses[Math.floor(Math.random() * OPENINGS[fen].responses.length)];
+  else return null;
 }
 
-const OPENINGS = [
-  {
-    name: "Sicilian Defense",
-    moves: [
-      [
-        ["R", "N", "B", "Q", "K", "B", "N", "R"],
-        ["P", "P", "P", "P", "P", "P", "P", "P"],
-        ["", "", "", "", "", "", "", ""],
-        ["", "", "", "", "", "", "", ""],
-        ["", "", "", "", "", "p", "", ""],
-        ["", "", "", "", "", "", "", ""],
-        ["p", "p", "p", "p", "", "p", "p", "p"],
-        ["r", "n", "b", "q", "k", "b", "n", "r"],
-      ],
-      [
-        ["R", "N", "B", "Q", "K", "B", "N", "R"],
-        ["P", "P", "", "P", "P", "P", "P", "P"],
-        ["", "", "P", "", "", "", "", ""],
-        ["", "", "", "", "", "", "", ""],
-        ["", "", "", "", "", "p", "", ""],
-        ["", "", "", "", "", "", "", ""],
-        ["p", "p", "p", "p", "", "p", "p", "p"],
-        ["r", "n", "b", "q", "k", "b", "n", "r"],
-      ],
+interface Opening {
+  [key: string]: {
+    responses: {
+      name: string;
+      from: { x: number; y: number };
+      to: { x: number; y: number };
+    }[];
+  };
+}
+
+const OPENINGS: Opening = {
+  "RNBQKBNR/PPPPPPPP/8/8/4p3/8/pppp1ppp/rnbqkbnr": {
+    responses: [
+      {
+        name: "King's Pawn Game: Sicilian Defense, Alapin Variation",
+        from: { x: 2, y: 1 },
+        to: { x: 2, y: 3 },
+      },
+      {
+        name: "King's Pawn Game: Sicilian Defense, Alapin Variation",
+        from: { x: 2, y: 1 },
+        to: { x: 2, y: 3 },
+      },
     ],
   },
-];
-
-// const SICILIAN_DEFENSE = [
-// [
-
-// ],
-// [
-//
-// ],
-// ];
-
-// const OPENINGS = [SICILIAN_DEFENSE];
+};

@@ -1,8 +1,8 @@
 export const colors = {
   light: "#f0d9b5",
   dark: "#b58863",
-  overTake: "rgba(255, 0, 0, 0.5)",
-  availableMove: "rgba(0, 255, 0, 0.5)",
+  overTake: "rgba(255, 0, 0, 0.25)",
+  availableMove: "rgba(50, 50, 50, 0.15)",
   selected: "rgba(255, 180, 180, 0.75)",
   hover: "rgba(255, 180, 180, 0.5)",
 };

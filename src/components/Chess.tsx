@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PieceType, PositionType } from "../data/interfaces";
 import { BOARD_SIZE, colors, STARTING_POSITION } from "../data/properties";
 import getAvailableMoves from "../helpers/getAvailableMoves";
@@ -25,15 +25,18 @@ export default function Chess() {
 
   // MINIMAX STATES
   const [timeToCompleteAIMove, setTimeToCompleteAIMove] = useState<number>(0);
-  const [depth, setDepth] = useState(7);
-  const [score, setScore] = useState(0);
+  const [depth, setDepth] = useState(2);
+  const [score, setScore] = useState<number | string>(0);
   const [checkCount, setCheckCount] = useState(0);
+  const [lastMove, setLastMove] = useState<PositionType>();
 
   const [boardHistory, setBoardHistory] = useState([STARTING_POSITION]);
   const [boardHistoryIndex, setBoardHistoryIndex] = useState(0);
 
+  const [moveCount, setMoveCount] = useState(0);
+
   // ~~~ REFS ~~~ \\
-  const boardRef = useRef<HTMLDivElement>(null);
+  const boardElementRef = useRef<HTMLDivElement>(null);
 
   // ~~~ INITIALIZE BOARD ~~~ \\
   useEffect(() => {
@@ -91,23 +94,27 @@ export default function Chess() {
     // If it's not the AI's turn, return
     if (whosTurn === 0) return;
 
+    // Check for openings
+    const openingMove = openings(board.map((b) => b));
+    if (openingMove) {
+      console.log(openingMove);
+      moveFrom(openingMove.from.x, openingMove.from.y, openingMove.to.x, openingMove.to.y);
+      setScore("book: " + openingMove.name + " opening");
+      return;
+    }
+
     // Timeout because the board needs to update before the AI can make a move
     setTimeout(() => {
-      const move = getBestMove(board, depth);
+      const move = getBestMove([...board], depth);
 
       if (move.from.x === -1) return;
 
-      // Check Openings
-      openings(board);
       moveFrom(move.from.x, move.from.y, move.to.x, move.to.y);
-
-      // Switch turns
-      setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
 
       setTimeToCompleteAIMove(move.timeToComplete ? move.timeToComplete : 0);
       setScore(move.score ? move.score : 0);
       setCheckCount(move.checkCount ? move.checkCount : 0);
-    }, 50);
+    }, 1000);
   }, [whosTurn]);
 
   // ~~~ ELEMENTS ~~~ \\
@@ -121,7 +128,7 @@ export default function Chess() {
           y={i}
           team={piece === piece.toUpperCase() ? 1 : 0}
           type={piece.toLowerCase()}
-          width={boardRef.current?.offsetWidth || null}
+          width={boardElementRef.current?.offsetWidth || null}
           setSelectedPiece={setSelectedPiece}
           onClick={handlePieceClick}
         />
@@ -139,7 +146,6 @@ export default function Chess() {
         moveFrom(selectedPiece!.x, selectedPiece!.y, x, y);
 
         setSelectedPiece(undefined);
-        setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
       }
     }
 
@@ -156,17 +162,11 @@ export default function Chess() {
     const newBoard = [...board];
     newBoard[y2][x2] = board[y1][x1];
     newBoard[y1][x1] = "";
+
     setBoard(newBoard);
     setSelectedPiece(undefined);
-
-    // With less pieces on the board, the AI will be able to search deeper
-    // setDepth(Math.round(100 / numberOfPieces(board)));
-
-    // Add to history
-    // setBoardHistory((boardHistory) => [...boardHistory, newBoard]);
-
-    // // Set the index to the last item in the array
-    // setBoardHistoryIndex(boardHistory.length);
+    setMoveCount((moveCount) => moveCount + 1);
+    setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
   }
 
   function handlePieceClick(piece: PieceType) {
@@ -178,7 +178,6 @@ export default function Chess() {
     for (let i = 0; i < availableMoves.length; i++) {
       if (availableMoves[i].x === piece.x && availableMoves[i].y === piece.y) {
         moveFrom(selectedPiece!.x, selectedPiece!.y, piece.x, piece.y);
-        setWhosTurn(whosTurn === 0 ? 1 : 0);
       }
     }
   }
@@ -186,7 +185,7 @@ export default function Chess() {
   // ~~~ RENDER ~~~ \\
   return (
     <div
-      ref={boardRef}
+      ref={boardElementRef}
       style={{
         display: "grid",
         gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
@@ -195,22 +194,13 @@ export default function Chess() {
     >
       {pieceElements}
       {squareElements}
-      <div style={{ gridColumn: "1 / -1", textAlign: "center", fontSize: "3rem" }}>
-        {whosTurn === 0 ? "White's turn" : "Black's turn"}
-        <br />
-        Score: {score}
-        <br />
-        Checks: {checkCount.toLocaleString()}
-        <br />
-        Depth: {depth}
-        <button onClick={() => setDepth((depth) => depth - 1)}>-</button>
-        <button onClick={() => setDepth((depth) => depth + 1)}>+</button>
-        <br />
-        {timeToCompleteAIMove > 0 ? `AI took ${timeToCompleteAIMove}ms to think` : null}
+      <div style={{ gridColumn: "1 / -1", textAlign: "center", fontSize: "2rem" }}>
+        <p>{whosTurn === 0 ? "White's turn" : "Black's turn"}</p>
+        <p>Eval: {score}</p>
+        <p>Checks: {checkCount.toLocaleString()}</p>
+        <p>Depth: {depth}</p>
+        <p>{`Time to think:  ${timeToCompleteAIMove}`}</p>
       </div>
     </div>
   );
-}
-function getNumberOfPieces(board: string[][]) {
-  throw new Error("Function not implemented.");
 }

@@ -18,12 +18,31 @@ export default function Square({ color, onClick, x, y, isOvertakeSquare, isAvail
         width: "100%",
         aspectRatio: "1/1",
         backgroundColor: color,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
       }}
     >
       {isOvertakeSquare ? (
-        <div style={{ aspectRatio: "1/1", backgroundColor: colors.overTake }} />
+        <div
+          style={{
+            aspectRatio: "1/1",
+            backgroundColor: "transparent",
+            width: "75%",
+            borderRadius: "50%",
+            zIndex: 2,
+            border: `0.5rem solid ${colors.overTake}`,
+          }}
+        />
       ) : isAvailableSquare ? (
-        <div style={{ aspectRatio: "1/1", backgroundColor: colors.availableMove }} />
+        <div
+          style={{
+            aspectRatio: "1/1",
+            backgroundColor: colors.availableMove,
+            width: "33%",
+            borderRadius: "50%",
+          }}
+        />
       ) : null}
     </div>
   );
