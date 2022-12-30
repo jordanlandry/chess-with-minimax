@@ -30,12 +30,17 @@ export function getBestMove(board: string[][], timeLimit: number, setDepth: (dep
 
   startTime = Date.now();
   while (Date.now() - startTime < timeLimit) {
+    // Reset the transposition table every iteration
+    transpositionTable = {};
+
     setDepth(depth);
     const initialBoard = board.map((row) => [...row]);
     const newBoard = initialBoard.map((row) => [...row]);
 
     const currentBestMove = minimax(newBoard, depth, false, -Infinity, Infinity, timeLimit, bestMove);
     const endTime = Date.now();
+
+    // console.log(currentBestMove);
 
     if (currentBestMove) {
       currentBestMove.timeToComplete = endTime - startTime;
@@ -46,10 +51,12 @@ export function getBestMove(board: string[][], timeLimit: number, setDepth: (dep
     depth++;
   }
 
+  // console.log(bestMove);
+
   return { ...bestMove, depth: depth - 1 };
 }
 
-export const pieceValues = {
+export const pieceValues: { [key: string]: number } = {
   p: 1,
   n: 3,
   b: 3,
@@ -71,7 +78,7 @@ function evaluateBoard(board: string[][]) {
   for (let i = 0; i < board.length; i++) {
     for (let j = 0; j < board[i].length; j++) {
       if (board[i][j] === "") continue;
-      // @ts-ignore
+
       score += pieceValues[board[i][j]];
     }
   }
@@ -128,6 +135,7 @@ export function minimax(
     for (let i = 0; i < allMoves.length; i++) {
       checkCount++;
       const move = allMoves[i];
+
       // Copy the board
       const newBoard = board.map((row) => [...row]);
 
@@ -136,7 +144,7 @@ export function minimax(
       board[move.from.y][move.from.x] = "";
 
       const prevEncounter = transpositionTable[boardToFen(board)];
-      // if (prevEncounter) return prevEncounter;
+      if (prevEncounter) return prevEncounter;
 
       const nextEval = minimax(board, depth - 1, false, alpha, beta, timeLimit, currentBestMove);
 
@@ -183,8 +191,8 @@ export function minimax(
       board[move.to.y][move.to.x] = move.piece;
       board[move.from.y][move.from.x] = "";
 
-      // const prevEncounter = transpositionTable[boardToFen(board)];
-      // if (prevEncounter) return prevEncounter;
+      const prevEncounter = transpositionTable[boardToFen(board)];
+      if (prevEncounter) return prevEncounter;
 
       const nextEval = minimax(board, depth - 1, true, alpha, beta, timeLimit, currentBestMove);
 

@@ -12,6 +12,10 @@ import Piece from "./Piece";
 import Square from "./Square";
 
 export default function Chess() {
+  interface MoveType extends PositionType {
+    isCastle: boolean;
+  }
+
   // ~~~ HOOKS ~~~ \\
   useWidth();
   useKeybind("Escape", () => setSelectedPiece(undefined));
@@ -20,12 +24,20 @@ export default function Chess() {
   const [board, setBoard] = useState(STARTING_POSITION);
   const [squareElements, setSquareElements] = useState<any>([]);
   const [selectedPiece, setSelectedPiece] = useState<PositionType>();
-  const [availableMoves, setAvailableMoves] = useState<PositionType[]>([]);
+  const [availableMoves, setAvailableMoves] = useState<MoveType[]>([]);
   const [whosTurn, setWhosTurn] = useState<0 | 1>(0); // 0 = white, 1 = black
+
+  // CASTLING STATES
+  const [whiteKingHasMoved, setWhiteKingHasMoved] = useState(false);
+  const [blackKingHasMoved, setBlackKingHasMoved] = useState(false);
+  const [whiteLeftRookHasMoved, setWhiteLeftRookHasMoved] = useState(false);
+  const [whiteRightRookHasMoved, setWhiteRightRookHasMoved] = useState(false);
+  const [blackLeftRookHasMoved, setBlackLeftRookHasMoved] = useState(false);
+  const [blackRightRookHasMoved, setBlackRightRookHasMoved] = useState(false);
 
   // MINIMAX STATES
   // const [timeToCompleteAIMove, setTimeToCompleteAIMove] = useState<number>(0);
-  const [timeToThink, setTimeToThink] = useState(5); // In Seconds
+  const [timeToThink, setTimeToThink] = useState(2.5); // In Seconds
   const [score, setScore] = useState<number | string>(0);
   const [checkCount, setCheckCount] = useState(0);
   const [lastMove, setLastMove] = useState<any>();
@@ -87,11 +99,38 @@ export default function Chess() {
 
   // ~~~ AVAILABLE MOVES ~~~ \\
   useEffect(() => {
-    setAvailableMoves(
-      selectedPiece
-        ? getAvailableMoves(board, board[selectedPiece!.y][selectedPiece!.x], selectedPiece?.x, selectedPiece?.y)
-        : []
-    );
+    let moves = selectedPiece
+      ? getAvailableMoves(board, board[selectedPiece!.y][selectedPiece!.x], selectedPiece?.x, selectedPiece?.y)
+      : [];
+
+    // Check if you can castle
+    for (let i = 0; i < moves.length; i++) {
+      if (!moves[i].isCastle) continue;
+
+      if (moves[i].x === 2 && moves[i].y === 0 && (blackKingHasMoved || blackLeftRookHasMoved)) {
+        moves.splice(i, 1);
+        i--;
+      }
+
+      if (moves[i].x === 6 && moves[i].y === 0 && (blackKingHasMoved || blackRightRookHasMoved)) {
+        moves.splice(i, 1);
+        i--;
+      }
+
+      if (moves[i].x === 2 && moves[i].y === 7 && (whiteKingHasMoved || whiteRightRookHasMoved)) {
+        moves.splice(i, 1);
+        i--;
+      }
+
+      if (moves[i].x === 6 && moves[i].y === 7 && (whiteKingHasMoved || whiteLeftRookHasMoved)) {
+        moves.splice(i, 1);
+        i--;
+      }
+      // TODO: Check if the king is in check after the move
+    }
+
+    setAvailableMoves(moves);
+    // Go through each move
   }, [selectedPiece]);
 
   // ~~~ HANDLE AI MOVES ~~~ \\
@@ -102,7 +141,6 @@ export default function Chess() {
     // Check for openings
     const openingMove = openings(board.map((b) => b));
     if (openingMove) {
-      console.log(openingMove);
       moveFrom(openingMove.from.x, openingMove.from.y, openingMove.to.x, openingMove.to.y);
       setScore("book: " + openingMove.name + " opening");
       return;
@@ -147,8 +185,18 @@ export default function Chess() {
     // If the selected square is an available move, move the piece there
     for (let i = 0; i < availableMoves.length; i++) {
       if (availableMoves[i].x === x && availableMoves[i].y === y) {
-        moveFrom(selectedPiece!.x, selectedPiece!.y, x, y);
+        // Check for castling
+        if (availableMoves[i].isCastle) {
+          // White Castle
+          if (y === 7 && x === 6) moveFrom(7, 7, 5, 7, false);
+          if (y === 7 && x === 2) moveFrom(0, 7, 3, 7, false);
 
+          // Black Castle
+          if (y === 0 && x === 6) moveFrom(7, 0, 5, 0, false);
+          if (y === 0 && x === 2) moveFrom(0, 0, 3, 0, false);
+        }
+
+        moveFrom(selectedPiece!.x, selectedPiece!.y, x, y);
         setSelectedPiece(undefined);
       }
     }
@@ -157,7 +205,7 @@ export default function Chess() {
     setSelectedPiece(undefined);
   }
 
-  function moveFrom(x1: number, y1: number, x2: number, y2: number) {
+  function moveFrom(x1: number, y1: number, x2: number, y2: number, changeTurn = true) {
     // Play audio
     const audio =
       board[y2][x2] === "" ? new Audio("./assets/sounds/move-self.mp3") : new Audio("./assets/sounds/capture.mp3");
@@ -170,8 +218,16 @@ export default function Chess() {
     setBoard(newBoard);
     setSelectedPiece(undefined);
     setMoveCount((moveCount) => moveCount + 1);
-    setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
     setLastMove({ from: { x: x1, y: y1 }, to: { x: x2, y: y2 } });
+
+    if (changeTurn) setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
+
+    if (board[y2][x2] === "k") setWhiteKingHasMoved(true);
+    if (board[y2][x2] === "K") setBlackKingHasMoved(true);
+    if (board[y2][x2] === "r" && y2 === 7 && x2 === 7) setWhiteLeftRookHasMoved(true);
+    if (board[y2][x2] === "r" && y2 === 7 && x2 === 0) setWhiteRightRookHasMoved(true);
+    if (board[y2][x2] === "R" && y2 === 0 && x2 === 7) setBlackLeftRookHasMoved(true);
+    if (board[y2][x2] === "R" && y2 === 0 && x2 === 0) setBlackRightRookHasMoved(true);
   }
 
   function handlePieceClick(piece: PieceType) {
@@ -205,8 +261,8 @@ export default function Chess() {
         <p>Checks: {checkCount.toLocaleString()}</p>
         <p>Depth: {depth}</p>
         <p>{`Time to think:  ${timeToThink}s`}</p>
-        <button onClick={() => setTimeToThink((prev) => (prev > 1 ? prev - 1 : 1))}>-</button>
-        <button onClick={() => setTimeToThink((prev) => prev + 1)}>+</button>
+        <button onClick={() => setTimeToThink((prev) => (prev > 0.5 ? prev - 0.5 : 0.5))}>-</button>
+        <button onClick={() => setTimeToThink((prev) => prev + 0.5)}>+</button>
       </div>
     </div>
   );

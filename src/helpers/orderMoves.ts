@@ -42,13 +42,13 @@ export default function orderMoves(
         currentBestMove.to.x === move.to.x &&
         currentBestMove.to.y === move.to.y
       ) {
-        confidence[i] += 2;
+        confidence[i] += 5;
       }
     }
 
     // If you are developing a piece, increase the confidence slightly (this is a very small optimization)
-    if (move.piece === "P" && move.to.y > move.from.y) confidence[i] -= 0.1;
-    if (move.piece === "p" && move.to.y < move.from.y) confidence[i] += 0.1;
+    if (move.piece === "P" && move.to.y > move.from.y) confidence[i] -= 0.5;
+    if (move.piece === "p" && move.to.y < move.from.y) confidence[i] += 0.5;
 
     // If you have a high value piece that is being attacked, increase the confidence of moving that piece
     // TODO
