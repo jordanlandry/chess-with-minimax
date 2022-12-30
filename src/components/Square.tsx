@@ -8,11 +8,28 @@ type Props = {
   y: number;
   isOvertakeSquare: boolean;
   isAvailableSquare: boolean;
+
+  movedFromX?: number;
+  movedFromY?: number;
+  movedToX?: number;
+  movedToY?: number;
 };
 
-export default function Square({ color, onClick, x, y, isOvertakeSquare, isAvailableSquare }: Props) {
+export default function Square({
+  color,
+  onClick,
+  x,
+  y,
+  isOvertakeSquare,
+  isAvailableSquare,
+  movedFromX,
+  movedFromY,
+  movedToX,
+  movedToY,
+}: Props) {
   return (
     <div
+      className={`${x}-${y}`}
       onClick={() => onClick(x, y)}
       style={{
         width: "100%",

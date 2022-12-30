@@ -15,7 +15,13 @@ export default function getAvailableMoves(board: string[][], piece: string, x: n
     if (board[y - 1][x - 1] && getColor(board[y - 1][x - 1]) !== currentColor) tryMove(x - 1, y - 1); // Capture Left
 
     // TODO En passant
+
     // TODO Promotion
+    if (y === 0) {
+      availableMoves.forEach((move: any) => {
+        move.promotion = "q";
+      });
+    }
   }
 
   // ~~~ BLACK PAWN ~~~ \\

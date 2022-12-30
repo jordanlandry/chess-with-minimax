@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import boardToFen from "./boardToFen";
 import getAvailableMoves from "./getAvailableMoves";
 import orderMoves from "./orderMoves";
 
@@ -12,23 +13,38 @@ interface MoveDatabase {
 
 let checkCount = 0;
 
-const transpositionTable = {};
+let transpositionTable: MoveDatabase = {};
 
-export function getBestMove(board: string[][], depth: number) {
+let startTime = 0;
+let elapsedTime = 0;
+export function getBestMove(board: string[][], timeLimit: number, setDepth: (depth: number) => void) {
+  let bestMove: MinimaxMove = {
+    from: { x: -1, y: -1 },
+    to: { x: -1, y: -1 },
+    piece: "",
+    score: -Infinity,
+  };
+
   checkCount = 0;
-  const startTime = Date.now();
+  let depth = 1;
 
-  const initialBoard = board.map((row) => [...row]);
-  const newBoard = initialBoard.map((row) => [...row]);
+  startTime = Date.now();
+  while (Date.now() - startTime < timeLimit) {
+    setDepth(depth);
+    const initialBoard = board.map((row) => [...row]);
+    const newBoard = initialBoard.map((row) => [...row]);
 
-  const bestMove = minimax(newBoard, depth, false, -Infinity, Infinity);
-  const endTime = Date.now();
+    const currentBestMove = minimax(newBoard, depth, false, -Infinity, Infinity, timeLimit);
+    const endTime = Date.now();
 
-  bestMove.timeToComplete = endTime - startTime;
-  bestMove.checkCount = checkCount;
+    currentBestMove.timeToComplete = endTime - startTime;
+    currentBestMove.checkCount = checkCount;
 
-  // console.log(transpositionTable);
-  return bestMove;
+    bestMove = currentBestMove;
+    depth++;
+  }
+
+  return { ...bestMove, depth: depth - 1 };
 }
 
 export const pieceValues = {
@@ -74,7 +90,16 @@ interface MinimaxMove extends Move {
 }
 
 // Minimax
-export function minimax(board: string[][], depth: number, isMaximizing: boolean, alpha: number, beta: number) {
+export function minimax(
+  board: string[][],
+  depth: number,
+  isMaximizing: boolean,
+  alpha: number,
+  beta: number,
+  timeLimit: number
+) {
+  elapsedTime = Date.now() - startTime;
+
   let bestMove: MinimaxMove = {
     from: { x: -1, y: -1 },
     to: { x: -1, y: -1 },
@@ -83,7 +108,7 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
   };
 
   // Base case
-  if (depth === 0) {
+  if (depth === 0 || elapsedTime > timeLimit) {
     bestMove.score = evaluateBoard(board);
     return bestMove;
   }
@@ -105,7 +130,10 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
       board[move.to.y][move.to.x] = move.piece;
       board[move.from.y][move.from.x] = "";
 
-      const nextEval = minimax(board, depth - 1, false, alpha, beta);
+      const prevEncounter = transpositionTable[boardToFen(board)];
+      // if (prevEncounter) return prevEncounter;
+
+      const nextEval = minimax(board, depth - 1, false, alpha, beta, timeLimit);
 
       // Undo the move
       board = newBoard.map((row) => [...row]);
@@ -115,6 +143,9 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
         bestScore = nextEval!.score;
         bestMove = { ...move, score: bestScore };
       }
+
+      // Update transposition table
+      transpositionTable[boardToFen(board)] = nextEval;
 
       // Update alpha
       alpha = Math.max(alpha, bestScore);
@@ -144,7 +175,10 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
       board[move.to.y][move.to.x] = move.piece;
       board[move.from.y][move.from.x] = "";
 
-      const nextEval = minimax(board, depth - 1, true, alpha, beta);
+      const prevEncounter = transpositionTable[boardToFen(board)];
+      // if (prevEncounter) return prevEncounter;
+
+      const nextEval = minimax(board, depth - 1, true, alpha, beta, timeLimit);
 
       // Undo the move
       board = newBoard.map((row) => [...row]);
@@ -154,6 +188,9 @@ export function minimax(board: string[][], depth: number, isMaximizing: boolean,
         bestScore = nextEval!.score;
         bestMove = { ...move, score: bestScore };
       }
+
+      // Update transposition table
+      transpositionTable[boardToFen(board)] = nextEval;
 
       // Update alpha
       beta = Math.min(beta, bestScore);

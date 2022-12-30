@@ -24,11 +24,12 @@ export default function Chess() {
   const [whosTurn, setWhosTurn] = useState<0 | 1>(0); // 0 = white, 1 = black
 
   // MINIMAX STATES
-  const [timeToCompleteAIMove, setTimeToCompleteAIMove] = useState<number>(0);
-  const [depth, setDepth] = useState(2);
+  // const [timeToCompleteAIMove, setTimeToCompleteAIMove] = useState<number>(0);
+  const [timeToThink, setTimeToThink] = useState(2); // In Seconds
   const [score, setScore] = useState<number | string>(0);
   const [checkCount, setCheckCount] = useState(0);
-  const [lastMove, setLastMove] = useState<PositionType>();
+  const [lastMove, setLastMove] = useState<any>();
+  const [depth, setDepth] = useState(0);
 
   const [boardHistory, setBoardHistory] = useState([STARTING_POSITION]);
   const [boardHistoryIndex, setBoardHistoryIndex] = useState(0);
@@ -71,6 +72,10 @@ export default function Chess() {
             y={j}
             isOvertakeSquare={isOvertakeSquare}
             isAvailableSquare={isAvailableSquare}
+            movedFromX={lastMove?.from.x}
+            movedFromY={lastMove?.from.y}
+            movedToX={lastMove?.to.x}
+            movedToY={lastMove?.to.y}
           />
         );
         key++;
@@ -105,16 +110,15 @@ export default function Chess() {
 
     // Timeout because the board needs to update before the AI can make a move
     setTimeout(() => {
-      const move = getBestMove([...board], depth);
+      const move = getBestMove([...board], timeToThink * 1000, setDepth);
 
       if (move.from.x === -1) return;
-
       moveFrom(move.from.x, move.from.y, move.to.x, move.to.y);
 
-      setTimeToCompleteAIMove(move.timeToComplete ? move.timeToComplete : 0);
+      setDepth(move.depth ? move.depth : 0);
       setScore(move.score ? move.score : 0);
       setCheckCount(move.checkCount ? move.checkCount : 0);
-    }, 1000);
+    }, 50);
   }, [whosTurn]);
 
   // ~~~ ELEMENTS ~~~ \\
@@ -167,6 +171,7 @@ export default function Chess() {
     setSelectedPiece(undefined);
     setMoveCount((moveCount) => moveCount + 1);
     setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
+    setLastMove({ from: { x: x1, y: y1 }, to: { x: x2, y: y2 } });
   }
 
   function handlePieceClick(piece: PieceType) {
@@ -189,7 +194,7 @@ export default function Chess() {
       style={{
         display: "grid",
         gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
-        width: "min(100%, 800px)",
+        width: "min(100%, 1000px)",
       }}
     >
       {pieceElements}
@@ -199,7 +204,9 @@ export default function Chess() {
         <p>Eval: {score}</p>
         <p>Checks: {checkCount.toLocaleString()}</p>
         <p>Depth: {depth}</p>
-        <p>{`Time to think:  ${timeToCompleteAIMove}`}</p>
+        <p>{`Time to think:  ${timeToThink}s`}</p>
+        <button onClick={() => setTimeToThink((prev) => (prev > 1 ? prev - 1 : 1))}>-</button>
+        <button onClick={() => setTimeToThink((prev) => prev + 1)}>+</button>
       </div>
     </div>
   );
