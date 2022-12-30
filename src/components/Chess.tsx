@@ -25,7 +25,7 @@ export default function Chess() {
 
   // MINIMAX STATES
   // const [timeToCompleteAIMove, setTimeToCompleteAIMove] = useState<number>(0);
-  const [timeToThink, setTimeToThink] = useState(2); // In Seconds
+  const [timeToThink, setTimeToThink] = useState(5); // In Seconds
   const [score, setScore] = useState<number | string>(0);
   const [checkCount, setCheckCount] = useState(0);
   const [lastMove, setLastMove] = useState<any>();

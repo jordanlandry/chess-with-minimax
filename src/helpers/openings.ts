@@ -3,7 +3,6 @@ import boardToFen from "./boardToFen";
 export default function openings(board: string[][]) {
   const fen = boardToFen(board);
 
-  console.log(fen);
   // @ts-ignore
   if (OPENINGS[fen]) return OPENINGS[fen].responses[Math.floor(Math.random() * OPENINGS[fen].responses.length)];
   else return null;

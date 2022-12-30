@@ -34,13 +34,15 @@ export function getBestMove(board: string[][], timeLimit: number, setDepth: (dep
     const initialBoard = board.map((row) => [...row]);
     const newBoard = initialBoard.map((row) => [...row]);
 
-    const currentBestMove = minimax(newBoard, depth, false, -Infinity, Infinity, timeLimit);
+    const currentBestMove = minimax(newBoard, depth, false, -Infinity, Infinity, timeLimit, bestMove);
     const endTime = Date.now();
 
-    currentBestMove.timeToComplete = endTime - startTime;
-    currentBestMove.checkCount = checkCount;
+    if (currentBestMove) {
+      currentBestMove.timeToComplete = endTime - startTime;
+      currentBestMove.checkCount = checkCount;
+      bestMove = currentBestMove;
+    }
 
-    bestMove = currentBestMove;
     depth++;
   }
 
@@ -96,7 +98,8 @@ export function minimax(
   isMaximizing: boolean,
   alpha: number,
   beta: number,
-  timeLimit: number
+  timeLimit: number,
+  currentBestMove: any
 ) {
   elapsedTime = Date.now() - startTime;
 
@@ -108,15 +111,17 @@ export function minimax(
   };
 
   // Base case
-  if (depth === 0 || elapsedTime > timeLimit) {
+  if (depth === 0) {
     bestMove.score = evaluateBoard(board);
     return bestMove;
   }
 
+  // Time limit reached
+  if (elapsedTime >= timeLimit) return null;
+
   // White is maximizing
   if (isMaximizing) {
-    const allMoves = orderMoves(board, getAllMoves(board, 0), true);
-
+    const allMoves = orderMoves(board, getAllMoves(board, 0), true, currentBestMove);
     let bestScore = -Infinity;
 
     // Go through all the moves
@@ -133,7 +138,10 @@ export function minimax(
       const prevEncounter = transpositionTable[boardToFen(board)];
       // if (prevEncounter) return prevEncounter;
 
-      const nextEval = minimax(board, depth - 1, false, alpha, beta, timeLimit);
+      const nextEval = minimax(board, depth - 1, false, alpha, beta, timeLimit, currentBestMove);
+
+      // Check if time limit reached
+      if (!nextEval) return null;
 
       // Undo the move
       board = newBoard.map((row) => [...row]);
@@ -145,7 +153,7 @@ export function minimax(
       }
 
       // Update transposition table
-      transpositionTable[boardToFen(board)] = nextEval;
+      // transpositionTable[boardToFen(board)] = nextEval;
 
       // Update alpha
       alpha = Math.max(alpha, bestScore);
@@ -159,7 +167,7 @@ export function minimax(
 
   // Black is minimizing
   else {
-    const allMoves = orderMoves(board, getAllMoves(board, 1), false);
+    const allMoves = orderMoves(board, getAllMoves(board, 1), false, currentBestMove);
 
     let bestScore = Infinity;
 
@@ -175,10 +183,13 @@ export function minimax(
       board[move.to.y][move.to.x] = move.piece;
       board[move.from.y][move.from.x] = "";
 
-      const prevEncounter = transpositionTable[boardToFen(board)];
+      // const prevEncounter = transpositionTable[boardToFen(board)];
       // if (prevEncounter) return prevEncounter;
 
-      const nextEval = minimax(board, depth - 1, true, alpha, beta, timeLimit);
+      const nextEval = minimax(board, depth - 1, true, alpha, beta, timeLimit, currentBestMove);
+
+      // Check if time limit reached
+      if (!nextEval) return null;
 
       // Undo the move
       board = newBoard.map((row) => [...row]);
@@ -190,7 +201,7 @@ export function minimax(
       }
 
       // Update transposition table
-      transpositionTable[boardToFen(board)] = nextEval;
+      // transpositionTable[boardToFen(board)] = nextEval;
 
       // Update alpha
       beta = Math.min(beta, bestScore);
