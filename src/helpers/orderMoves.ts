@@ -12,6 +12,7 @@ export default function orderMoves(
   const confidence = new Array(availableMoves.length).fill(0);
   const newAvailableMoves = [...availableMoves];
 
+  return newAvailableMoves;
   // Check if you can capture a piece with high value
   for (let i = 0; i < availableMoves.length; i++) {
     const move = availableMoves[i];

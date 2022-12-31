@@ -30,6 +30,8 @@ export default function Chess() {
   const [availableMoves, setAvailableMoves] = useState<MoveType[]>([]);
   const [whosTurn, setWhosTurn] = useState<0 | 1>(0); // 0 = white, 1 = black
 
+  const [grabbedPiece, setGrabbedPiece] = useState(-1);
+
   // CASTLING STATES
   const [whiteKingHasMoved, setWhiteKingHasMoved] = useState(false);
   const [blackKingHasMoved, setBlackKingHasMoved] = useState(false);
@@ -181,10 +183,12 @@ export default function Chess() {
 
   // ~~~ ELEMENTS ~~~ \\
   const pieceElements = board.map((row, i) => {
+    let count = 0;
     return row.map((piece, j) => {
+      count++;
       return piece ? (
         <Piece
-          id={nextId()}
+          id={count}
           key={nextId()}
           x={j}
           y={i}
@@ -193,6 +197,9 @@ export default function Chess() {
           width={boardElementRef.current?.offsetWidth || null}
           setSelectedPiece={setSelectedPiece}
           onClick={handlePieceClick}
+          grabbedPiece={grabbedPiece}
+          setGrabbedPiece={setGrabbedPiece}
+          moveToSquareFunction={clickSquareToMove}
         />
       ) : null;
     });
@@ -256,8 +263,8 @@ export default function Chess() {
 
   function handlePieceClick(piece: PieceType) {
     if (piece.team === whosTurn) {
-      if (selectedPiece?.x === piece.x && selectedPiece?.y === piece.y) setSelectedPiece(undefined);
-      else setSelectedPiece({ x: piece.x, y: piece.y });
+      // if (selectedPiece?.x === piece.x && selectedPiece?.y === piece.y) setSelectedPiece(undefined);
+      setSelectedPiece({ x: piece.x, y: piece.y });
 
       return;
     }
@@ -289,6 +296,7 @@ export default function Chess() {
         gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
         width: "min(100%, min(80vh, 800px))",
       }}
+      draggable={false}
     >
       {pieceElements}
       {squareElements}
