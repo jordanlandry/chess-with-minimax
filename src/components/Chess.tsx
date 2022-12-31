@@ -256,7 +256,9 @@ export default function Chess() {
 
   function handlePieceClick(piece: PieceType) {
     if (piece.team === whosTurn) {
-      setSelectedPiece({ x: piece.x, y: piece.y });
+      if (selectedPiece?.x === piece.x && selectedPiece?.y === piece.y) setSelectedPiece(undefined);
+      else setSelectedPiece({ x: piece.x, y: piece.y });
+
       return;
     }
 
