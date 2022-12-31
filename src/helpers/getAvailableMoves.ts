@@ -17,8 +17,11 @@ export default function getAvailableMoves(board: string[][], piece: string, x: n
     // TODO En passant
 
     // TODO Promotion
-    if (y === 0) {
-      availableMoves.forEach((move: any) => (move.promotion = "q"));
+    if (y === 1 && board[0][x] === "") {
+      availableMoves.push({ x, y: 0, promoteTo: "q" });
+      availableMoves.push({ x, y: 0, promoteTo: "r" });
+      availableMoves.push({ x, y: 0, promoteTo: "b" });
+      availableMoves.push({ x, y: 0, promoteTo: "n" });
     }
   }
 
@@ -34,6 +37,12 @@ export default function getAvailableMoves(board: string[][], piece: string, x: n
 
     // TODO En passant
     // TODO Promotion
+    if (y === 6 && board[7][x] === "") {
+      availableMoves.push({ x, y: 7, promoteTo: "q" });
+      availableMoves.push({ x, y: 7, promoteTo: "r" });
+      availableMoves.push({ x, y: 7, promoteTo: "b" });
+      availableMoves.push({ x, y: 7, promoteTo: "n" });
+    }
   }
 
   // ~~~ ROOK ~~~ \\

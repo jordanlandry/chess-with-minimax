@@ -6,9 +6,11 @@ import { getAllMoves, getBestMove } from "../helpers/minimax";
 import nextId from "../helpers/nextId";
 import numberOfPieces from "../helpers/numberOfPieces";
 import openings from "../helpers/openings";
+import useHeight from "../hooks/useHeight";
 import useKeybind from "../hooks/useKeybind";
 import useWidth from "../hooks/useWidth";
 import Piece from "./Piece";
+import Promotion from "./Promotion";
 import Square from "./Square";
 
 export default function Chess() {
@@ -18,6 +20,7 @@ export default function Chess() {
 
   // ~~~ HOOKS ~~~ \\
   useWidth();
+  useHeight();
   useKeybind("Escape", () => setSelectedPiece(undefined));
 
   // ~~~ STATES ~~~ \\
@@ -34,6 +37,13 @@ export default function Chess() {
   const [whiteRightRookHasMoved, setWhiteRightRookHasMoved] = useState(false);
   const [blackLeftRookHasMoved, setBlackLeftRookHasMoved] = useState(false);
   const [blackRightRookHasMoved, setBlackRightRookHasMoved] = useState(false);
+
+  // PROMOTION STATES
+  const [isPromoting, setIsPromoting] = useState(false);
+  const [promotionPiece, setPromotionPiece] = useState("");
+
+  // const isPromotingRef = useRef(isPromoting);
+  // isPromotingRef.current = isPromoting;
 
   // MINIMAX STATES
   // const [timeToCompleteAIMove, setTimeToCompleteAIMove] = useState<number>(0);
@@ -138,6 +148,12 @@ export default function Chess() {
     // If it's not the AI's turn, return
     if (whosTurn === 0) return;
 
+    // If the other person is promoting, return
+    if (isPromoting) return;
+
+    // If the game is over, return
+    // TODO
+
     // Check for openings
     const openingMove = openings(board.map((b) => b));
     if (openingMove) {
@@ -150,6 +166,10 @@ export default function Chess() {
     setTimeout(() => {
       const move = getBestMove([...board], timeToThink * 1000, setDepth);
 
+      if (move.to.y === 7 && move.piece === "P") {
+        promotePiece("Q", move.to.x, move.to.y);
+      }
+
       if (move.from.x === -1) return;
       moveFrom(move.from.x, move.from.y, move.to.x, move.to.y);
 
@@ -157,7 +177,7 @@ export default function Chess() {
       setScore(move.score ? move.score : 0);
       setCheckCount(move.checkCount ? move.checkCount : 0);
     }, 50);
-  }, [whosTurn]);
+  }, [whosTurn, isPromoting]);
 
   // ~~~ ELEMENTS ~~~ \\
   const pieceElements = board.map((row, i) => {
@@ -195,6 +215,10 @@ export default function Chess() {
           if (y === 0 && x === 6) moveFrom(7, 0, 5, 0, false);
           if (y === 0 && x === 2) moveFrom(0, 0, 3, 0, false);
         }
+
+        // Check for Promotion
+        // @ts-ignore
+        if (availableMoves[i].promoteTo) setIsPromoting(true);
 
         moveFrom(selectedPiece!.x, selectedPiece!.y, x, y);
         setSelectedPiece(undefined);
@@ -243,6 +267,17 @@ export default function Chess() {
     }
   }
 
+  const promotePiece = (to: string, x?: number, y?: number) => {
+    // Set the piece to the promoted piece
+    const newBoard = [...board];
+    if (x !== undefined && y !== undefined) newBoard[y - 1][x] = to;
+    else newBoard[lastMove.to.y][lastMove.to.x] = to;
+
+    setBoard(newBoard);
+    setPromotionPiece(to);
+    setIsPromoting(false);
+  };
+
   // ~~~ RENDER ~~~ \\
   return (
     <div
@@ -250,11 +285,19 @@ export default function Chess() {
       style={{
         display: "grid",
         gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
-        width: "min(100%, 1000px)",
+        width: "min(100%, min(80vh, 800px))",
       }}
     >
       {pieceElements}
       {squareElements}
+      {isPromoting ? (
+        <Promotion
+          team={0}
+          width={boardElementRef.current?.offsetWidth!}
+          x={lastMove.from.x}
+          setPromotionPiece={promotePiece}
+        />
+      ) : null}
       <div style={{ gridColumn: "1 / -1", textAlign: "center", fontSize: "2rem" }}>
         <p>{whosTurn === 0 ? "White's turn" : "Black's turn"}</p>
         <p>Eval: {score}</p>
