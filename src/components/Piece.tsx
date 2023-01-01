@@ -38,19 +38,15 @@ export default function Piece({
 
     if (newX === x && newY === y) return;
 
-    onClick({ x, y, team, type });
     moveToSquareFunction(newY, newX);
-  };
-
-  const handleOnClick = () => {
-    onClick({ x, y, team, type });
   };
 
   const handleDrag = (e: MouseEvent) => {
     if (!mouseDown) return;
     if (grabbedPiece !== id) return;
 
-    // if ()
+    // Only allow dragging of white pieces for now until I add human playing as black
+    if (team !== 0) return;
 
     const newX = e.clientX - width / 16;
     const newY = e.clientY - width / 16;

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import boardToFen from "./boardToFen";
+import { database } from "./database";
 import getAvailableMoves from "./getAvailableMoves";
 import orderMoves from "./orderMoves";
 
@@ -40,8 +41,6 @@ export function getBestMove(board: string[][], timeLimit: number, setDepth: (dep
     const currentBestMove = minimax(newBoard, depth, false, -Infinity, Infinity, timeLimit, bestMove);
     const endTime = Date.now();
 
-    // console.log(currentBestMove);
-
     if (currentBestMove) {
       currentBestMove.timeToComplete = endTime - startTime;
       currentBestMove.checkCount = checkCount;
@@ -50,8 +49,6 @@ export function getBestMove(board: string[][], timeLimit: number, setDepth: (dep
 
     depth++;
   }
-
-  // console.log(bestMove);
 
   return { ...bestMove, depth: depth - 1 };
 }
@@ -80,6 +77,25 @@ function evaluateBoard(board: string[][]) {
       if (board[i][j] === "") continue;
 
       score += pieceValues[board[i][j]];
+
+      // Add positional score
+      if (board[i][j] === "p") score += 0.1 * (6 - i);
+      if (board[i][j] === "P") score -= 0.1 * i;
+
+      if (board[i][j] === "n") score += 0.11 * (6 - i);
+      if (board[i][j] === "N") score -= 0.11 * i;
+
+      if (board[i][j] === "b") score += 0.11 * (6 - i);
+      if (board[i][j] === "B") score -= 0.11 * i;
+
+      if (board[i][j] === "r") score += 0.12 * (6 - i);
+      if (board[i][j] === "R") score -= 0.12 * i;
+
+      if (board[i][j] === "q") score += 0.13 * (6 - i);
+      if (board[i][j] === "Q") score -= 0.13 * i;
+
+      // if (board[i][j] === "k") score += 0.1 * (6 - i);
+      // if (board[i][j] === "K") score -= 0.1 * i;
     }
   }
 
@@ -143,6 +159,20 @@ export function minimax(
       board[move.to.y][move.to.x] = move.piece;
       board[move.from.y][move.from.x] = "";
 
+      // Check if it's a pawn promotion
+      if (move.piece === "p" && move.to.y === 0) board[move.to.y][move.to.x] = "q";
+
+      // Check for castle -- Just need to move the rook to the correct position
+      if (move.piece === "k" && move.from.x === 4 && move.to.x === 6) {
+        board[7][5] = "r";
+        board[7][7] = "";
+      }
+
+      if (move.piece === "k" && move.from.x === 4 && move.to.x === 2) {
+        board[7][3] = "r";
+        board[7][0] = "";
+      }
+
       const prevEncounter = transpositionTable[boardToFen(board)];
       if (prevEncounter) return prevEncounter;
 
@@ -190,6 +220,20 @@ export function minimax(
       // Make the move
       board[move.to.y][move.to.x] = move.piece;
       board[move.from.y][move.from.x] = "";
+
+      // Check for pawn promotion
+      if (move.piece === "P" && move.to.y === 7) board[move.to.y][move.to.x] = "Q";
+
+      // Check for castle -- Just need to move the rook to the correct position
+      if (move.piece === "K" && move.from.x === 4 && move.to.x === 6) {
+        board[0][5] = "R";
+        board[0][7] = "";
+      }
+
+      if (move.piece === "K" && move.from.x === 4 && move.to.x === 2) {
+        board[0][3] = "R";
+        board[0][0] = "";
+      }
 
       const prevEncounter = transpositionTable[boardToFen(board)];
       if (prevEncounter) return prevEncounter;
