@@ -108,7 +108,7 @@ export default function Chess() {
     }
 
     setSquareElements(squareElements);
-  }, [availableMoves]);
+  }, [availableMoves, grabbedPiece]);
 
   // ~~~ AVAILABLE MOVES ~~~ \\
   useEffect(() => {
@@ -313,26 +313,16 @@ export default function Chess() {
       setGrabbedPiece(-1);
     };
 
-    // const handleMouseDown = (e: MouseEvent) => {
-    //   setMouseX(e.clientX);
-    //   setMouseY(e.clientY);
-    // };
-
     const handleMouseMove = (e: MouseEvent) => {
       if (grabbedPiece === -1) return;
-
-      // setHoveredSquareX(Math.floor((e.clientX - boardElementRef.current!.getBoundingClientRect().left) / 100));
-      // setHoveredSquareY(Math.floor((e.clientY - boardElementRef.current!.getBoundingClientRect().top) / 100));
     };
 
     document.addEventListener("mouseup", handleMouseUp);
     document.addEventListener("mousemove", handleMouseMove);
-    // document.addEventListener("mousedown", handleMouseDown);
 
     return () => {
       document.removeEventListener("mouseup", handleMouseUp);
       document.removeEventListener("mousemove", handleMouseMove);
-      // document.removeEventListener("mousedown", handleMouseDown);
     };
   }, []);
 
