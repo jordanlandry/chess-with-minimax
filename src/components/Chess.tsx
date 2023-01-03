@@ -102,6 +102,8 @@ export default function Chess() {
             movedToY={lastMove?.to.y}
             width={boardElementRef.current?.clientWidth! / BOARD_SIZE}
             holdingPiece={grabbedPiece !== -1}
+            selectedX={selectedPiece?.x}
+            selectedY={selectedPiece?.y}
           />
         );
         key++;

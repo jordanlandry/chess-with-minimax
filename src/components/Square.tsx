@@ -16,6 +16,9 @@ type Props = {
 
   width: number;
   holdingPiece: boolean;
+
+  selectedX: number | undefined;
+  selectedY: number | undefined;
 };
 
 export default function Square({
@@ -30,6 +33,9 @@ export default function Square({
   movedToX,
   movedToY,
   width,
+
+  selectedX,
+  selectedY,
 
   holdingPiece,
 }: Props) {
@@ -58,6 +64,9 @@ export default function Square({
   if (movedToX === y && movedToY === x) {
     console.log(x, y);
   }
+
+  const showYellow =
+    (selectedY === x && selectedX === y) || (movedFromX == y && movedFromY == x) || (movedToX === y && movedToY === x);
 
   return (
     <div
@@ -95,23 +104,11 @@ export default function Square({
         />
       ) : null}
 
-      {movedToX === y && movedToY === x ? (
+      {showYellow ? (
         <div
           style={{
             position: "absolute",
             backgroundColor: colors.movedTo,
-            height: width,
-            width: width,
-            left: `${y * width}px`,
-            top: `${x * width}px`,
-          }}
-        />
-      ) : null}
-      {movedFromX === y && movedFromY === x ? (
-        <div
-          style={{
-            position: "absolute",
-            backgroundColor: colors.movedFrom,
             height: width,
             width: width,
             left: `${y * width}px`,
