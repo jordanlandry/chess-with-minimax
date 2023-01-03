@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { PieceStyleContext } from "../App";
+import clamp from "../helpers/clamp";
 
 export default function Piece({
   id,
@@ -23,6 +24,8 @@ export default function Piece({
   const [mouseDown, setMouseDown] = useState(grabbedPiece === id);
 
   const handleMouseDown = () => {
+    if (grabbedPiece !== -1) return;
+
     onClick({ x, y, team, type });
     setGrabbedPiece(id);
     setMouseDown(true);
@@ -42,29 +45,14 @@ export default function Piece({
   };
 
   const handleDrag = (e: MouseEvent) => {
-    if (!mouseDown) return;
-    if (grabbedPiece !== id) return;
-
-    // Only allow dragging of white pieces for now until I add human playing as black
-    if (team !== 0) return;
+    if (!mouseDown || grabbedPiece !== id) return;
 
     const newX = e.clientX - width / 16;
     const newY = e.clientY - width / 16;
 
-    setXPos(newX);
-    setYPos(newY);
+    setXPos(clamp(newX, -width / 16, width - width / 16));
+    setYPos(clamp(newY, -width / 16, width - width / 16));
   };
-
-  useEffect(() => {
-    // const handleMouseDown = (e: MouseEvent) => {
-    //   setXPos(e.clientX - width / 16);
-    //   setYPos(e.clientY - width / 16);
-    // };
-    // window.addEventListener("mousedown", handleMouseDown);
-    // return () => {
-    //   window.removeEventListener("mousedown", handleMouseDown);
-    // };
-  }, []);
 
   return (
     <img

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { colors } from "../data/properties";
 
 type Props = {
@@ -13,6 +13,9 @@ type Props = {
   movedFromY?: number;
   movedToX?: number;
   movedToY?: number;
+
+  width: number;
+  holdingPiece: boolean;
 };
 
 export default function Square({
@@ -26,7 +29,32 @@ export default function Square({
   movedFromY,
   movedToX,
   movedToY,
+  width,
+
+  holdingPiece,
 }: Props) {
+  const [hoverX, setHoverX] = useState(-1);
+  const [hoverY, setHoverY] = useState(-1);
+
+  useEffect(() => {
+    if (!holdingPiece) {
+      setHoverX(-1);
+      setHoverY(-1);
+      return;
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newX = Math.floor(e.clientX / width);
+      const newY = Math.floor(e.clientY / width);
+
+      setHoverX(newX);
+      setHoverY(newY);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [holdingPiece]);
+
   return (
     <div
       className={`${x}-${y}`}
@@ -38,6 +66,7 @@ export default function Square({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        boxShadow: hoverX === y && hoverY === x ? `inset 0 0 0 0.5rem rgba(255, 255, 255, 0.5)` : "none",
       }}
     >
       {isOvertakeSquare ? (

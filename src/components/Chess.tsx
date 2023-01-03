@@ -32,8 +32,6 @@ export default function Chess() {
   const [availableMoves, setAvailableMoves] = useState<MoveType[]>([]);
   const [whosTurn, setWhosTurn] = useLocalStorage("whosTurn", 0); // 0 = white, 1 = black
 
-  const [grabbedPiece, setGrabbedPiece] = useState(-1);
-
   // CASTLING STATES
   const [whiteKingHasMoved, setWhiteKingHasMoved] = useState(false);
   const [blackKingHasMoved, setBlackKingHasMoved] = useState(false);
@@ -57,6 +55,9 @@ export default function Chess() {
   const [boardHistoryIndex, setBoardHistoryIndex] = useState(0);
 
   const [moveCount, setMoveCount] = useState(0);
+
+  // PIECE STATES
+  const [grabbedPiece, setGrabbedPiece] = useState(-1);
 
   // ~~~ REFS ~~~ \\
   const boardElementRef = useRef<HTMLDivElement>(null);
@@ -98,6 +99,8 @@ export default function Chess() {
             movedFromY={lastMove?.from.y}
             movedToX={lastMove?.to.x}
             movedToY={lastMove?.to.y}
+            width={boardElementRef.current?.clientWidth! / BOARD_SIZE}
+            holdingPiece={grabbedPiece !== -1}
           />
         );
         key++;
@@ -163,7 +166,6 @@ export default function Chess() {
     }
 
     // Timeout because the board needs to update before the AI can make a move
-
     setTimeout(() => {
       const move = getBestMove([...board], timeToThink * 1000, setDepth);
 
@@ -177,17 +179,16 @@ export default function Chess() {
       setDepth(move.depth ? move.depth : 0);
       setScore(move.score ? move.score : 0);
       setCheckCount(move.checkCount ? move.checkCount : 0);
-    }, 50);
+    }, 250);
   }, [whosTurn, isPromoting]);
 
   // ~~~ ELEMENTS ~~~ \\
+
   const pieceElements = board.map((row: any, i: number) => {
-    let count = 0;
     return row.map((piece: any, j: number) => {
-      count++;
       return piece ? (
         <Piece
-          id={count}
+          id={i * 8 + j}
           key={nextId()}
           x={j}
           y={i}
@@ -262,9 +263,7 @@ export default function Chess() {
 
   function handlePieceClick(piece: PieceType) {
     if (piece.team === whosTurn) {
-      // if (selectedPiece?.x === piece.x && selectedPiece?.y === piece.y) setSelectedPiece(undefined);
       setSelectedPiece({ x: piece.x, y: piece.y });
-
       return;
     }
 
@@ -287,8 +286,6 @@ export default function Chess() {
   };
 
   const reset = () => {
-    console.log(STARTING_POSITION);
-
     setWhosTurn(0);
     setMoveCount(0);
     setLastMove({ from: { x: 0, y: 0 }, to: { x: 0, y: 0 } });
@@ -309,6 +306,35 @@ export default function Chess() {
     setSquareElements([]);
     setBoard(STARTING_POSITION);
   };
+
+  // ~~~ DRAG AND DROP ~~~ \\
+  useEffect(() => {
+    const handleMouseUp = (e: MouseEvent) => {
+      setGrabbedPiece(-1);
+    };
+
+    // const handleMouseDown = (e: MouseEvent) => {
+    //   setMouseX(e.clientX);
+    //   setMouseY(e.clientY);
+    // };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (grabbedPiece === -1) return;
+
+      // setHoveredSquareX(Math.floor((e.clientX - boardElementRef.current!.getBoundingClientRect().left) / 100));
+      // setHoveredSquareY(Math.floor((e.clientY - boardElementRef.current!.getBoundingClientRect().top) / 100));
+    };
+
+    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("mousemove", handleMouseMove);
+    // document.addEventListener("mousedown", handleMouseDown);
+
+    return () => {
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("mousemove", handleMouseMove);
+      // document.removeEventListener("mousedown", handleMouseDown);
+    };
+  }, []);
 
   // ~~~ RENDER ~~~ \\
   return (
