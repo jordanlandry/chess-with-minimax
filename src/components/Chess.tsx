@@ -2,12 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { PieceType, PositionType } from "../data/interfaces";
 import { BOARD_SIZE, colors, STARTING_POSITION } from "../data/properties";
 import getAvailableMoves from "../helpers/getAvailableMoves";
-import { getAllMoves, getBestMove } from "../helpers/minimax";
+import { getBestMove } from "../helpers/minimax";
 import nextId from "../helpers/nextId";
-import numberOfPieces from "../helpers/numberOfPieces";
 import openings from "../helpers/openings";
 import useHeight from "../hooks/useHeight";
 import useKeybind from "../hooks/useKeybind";
+import useLocalStorage from "../hooks/useLocalStorage";
 import useWidth from "../hooks/useWidth";
 import Piece from "./Piece";
 import Promotion from "./Promotion";
@@ -22,13 +22,15 @@ export default function Chess() {
   useWidth();
   useHeight();
   useKeybind("Escape", () => setSelectedPiece(undefined));
-
   // ~~~ STATES ~~~ \\
-  const [board, setBoard] = useState(STARTING_POSITION);
+  const [board, setBoard] = useLocalStorage(
+    "position",
+    STARTING_POSITION.map((row) => [...row])
+  );
   const [squareElements, setSquareElements] = useState<any>([]);
   const [selectedPiece, setSelectedPiece] = useState<PositionType>();
   const [availableMoves, setAvailableMoves] = useState<MoveType[]>([]);
-  const [whosTurn, setWhosTurn] = useState<0 | 1>(0); // 0 = white, 1 = black
+  const [whosTurn, setWhosTurn] = useLocalStorage("whosTurn", 0); // 0 = white, 1 = black
 
   const [grabbedPiece, setGrabbedPiece] = useState(-1);
 
@@ -44,18 +46,14 @@ export default function Chess() {
   const [isPromoting, setIsPromoting] = useState(false);
   const [promotionPiece, setPromotionPiece] = useState("");
 
-  // const isPromotingRef = useRef(isPromoting);
-  // isPromotingRef.current = isPromoting;
-
   // MINIMAX STATES
-  // const [timeToCompleteAIMove, setTimeToCompleteAIMove] = useState<number>(0);
-  const [timeToThink, setTimeToThink] = useState(2.5); // In Seconds
-  const [score, setScore] = useState<number | string>(0);
+  const [timeToThink, setTimeToThink] = useLocalStorage("aiTimeToThink", 2.5); // In Seconds
+  const [score, setScore] = useState<number>(0);
   const [checkCount, setCheckCount] = useState(0);
   const [lastMove, setLastMove] = useState<any>();
   const [depth, setDepth] = useState(0);
 
-  const [boardHistory, setBoardHistory] = useState([STARTING_POSITION]);
+  const [boardHistory, setBoardHistory] = useLocalStorage("boardHistory", [STARTING_POSITION]);
   const [boardHistoryIndex, setBoardHistoryIndex] = useState(0);
 
   const [moveCount, setMoveCount] = useState(0);
@@ -157,14 +155,15 @@ export default function Chess() {
     // TODO
 
     // Check for openings
-    const openingMove = openings(board.map((b) => b));
+    const openingMove = openings(board.map((b: any) => b));
     if (openingMove) {
       moveFrom(openingMove.from.x, openingMove.from.y, openingMove.to.x, openingMove.to.y);
-      setScore("book: " + openingMove.name + " opening");
+      // setScore(openingMove.name);
       return;
     }
 
     // Timeout because the board needs to update before the AI can make a move
+
     setTimeout(() => {
       const move = getBestMove([...board], timeToThink * 1000, setDepth);
 
@@ -182,9 +181,9 @@ export default function Chess() {
   }, [whosTurn, isPromoting]);
 
   // ~~~ ELEMENTS ~~~ \\
-  const pieceElements = board.map((row, i) => {
+  const pieceElements = board.map((row: any, i: number) => {
     let count = 0;
-    return row.map((piece, j) => {
+    return row.map((piece: any, j: number) => {
       count++;
       return piece ? (
         <Piece
@@ -251,7 +250,7 @@ export default function Chess() {
     setMoveCount((moveCount) => moveCount + 1);
     setLastMove({ from: { x: x1, y: y1 }, to: { x: x2, y: y2 } });
 
-    if (changeTurn) setWhosTurn((whosTurn) => (whosTurn === 0 ? 1 : 0));
+    if (changeTurn) setWhosTurn((whosTurn: number) => (whosTurn === 0 ? 1 : 0));
 
     if (board[y2][x2] === "k") setWhiteKingHasMoved(true);
     if (board[y2][x2] === "K") setBlackKingHasMoved(true);
@@ -287,6 +286,30 @@ export default function Chess() {
     setIsPromoting(false);
   };
 
+  const reset = () => {
+    console.log(STARTING_POSITION);
+
+    setWhosTurn(0);
+    setMoveCount(0);
+    setLastMove({ from: { x: 0, y: 0 }, to: { x: 0, y: 0 } });
+    setWhiteKingHasMoved(false);
+    setBlackKingHasMoved(false);
+    setWhiteLeftRookHasMoved(false);
+    setWhiteRightRookHasMoved(false);
+    setBlackLeftRookHasMoved(false);
+    setBlackRightRookHasMoved(false);
+    setPromotionPiece("");
+    setIsPromoting(false);
+    setAvailableMoves([]);
+    setSelectedPiece(undefined);
+    setScore(0);
+    setGrabbedPiece(-1);
+    setDepth(0);
+    setCheckCount(0);
+    setSquareElements([]);
+    setBoard(STARTING_POSITION);
+  };
+
   // ~~~ RENDER ~~~ \\
   return (
     <div
@@ -310,12 +333,13 @@ export default function Chess() {
       ) : null}
       <div style={{ gridColumn: "1 / -1", textAlign: "center", fontSize: "2rem" }}>
         <p>{whosTurn === 0 ? "White's turn" : "Black's turn"}</p>
-        <p>Eval: {score}</p>
+        <p>Eval: {Math.round(score! * 10) / 10}</p>
         <p>Checks: {checkCount.toLocaleString()}</p>
         <p>Depth: {depth}</p>
         <p>{`Time to think:  ${timeToThink}s`}</p>
-        <button onClick={() => setTimeToThink((prev) => (prev > 0.5 ? prev - 0.5 : 0.5))}>-</button>
-        <button onClick={() => setTimeToThink((prev) => prev + 0.5)}>+</button>
+        <button onClick={() => setTimeToThink((prev: any) => (prev > 0.5 ? prev - 0.5 : 0.5))}>-</button>
+        <button onClick={() => setTimeToThink((prev: any) => prev + 0.5)}>+</button>
+        <button onClick={reset}>Reset</button>
       </div>
     </div>
   );
