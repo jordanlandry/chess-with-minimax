@@ -9,6 +9,7 @@ import useHeight from "../hooks/useHeight";
 import useKeybind from "../hooks/useKeybind";
 import useLocalStorage from "../hooks/useLocalStorage";
 import useWidth from "../hooks/useWidth";
+import EvalBar from "./EvalBar";
 import Piece from "./Piece";
 import Promotion from "./Promotion";
 import Square from "./Square";
@@ -104,6 +105,8 @@ export default function Chess() {
             holdingPiece={grabbedPiece !== -1}
             selectedX={selectedPiece?.x}
             selectedY={selectedPiece?.y}
+            offsetX={boardElementRef.current?.offsetLeft || 0}
+            offsetY={boardElementRef.current?.offsetTop || 0}
           />
         );
         key++;
@@ -204,12 +207,18 @@ export default function Chess() {
           grabbedPiece={grabbedPiece}
           setGrabbedPiece={setGrabbedPiece}
           moveToSquareFunction={clickSquareToMove}
+          offsetX={boardElementRef.current?.offsetLeft || 0}
+          offsetY={boardElementRef.current?.offsetTop || 0}
         />
       ) : null;
     });
   });
 
   // ~~~ FUNCTIONS ~~~ \\
+  function animatePiece() {
+    if (!selectedPiece) return;
+  }
+
   function clickSquareToMove(y: number, x: number) {
     if (!selectedPiece) return;
 
@@ -232,6 +241,7 @@ export default function Chess() {
         if (availableMoves[i].promoteTo) setIsPromoting(true);
 
         moveFrom(selectedPiece!.x, selectedPiece!.y, x, y);
+
         setSelectedPiece(undefined);
       }
     }
@@ -241,6 +251,7 @@ export default function Chess() {
   }
 
   function moveFrom(x1: number, y1: number, x2: number, y2: number, changeTurn = true) {
+    animatePiece();
     // Play audio
     const audio =
       board[y2][x2] === "" ? new Audio("./assets/sounds/move-self.mp3") : new Audio("./assets/sounds/capture.mp3");
@@ -332,34 +343,37 @@ export default function Chess() {
 
   // ~~~ RENDER ~~~ \\
   return (
-    <div
-      ref={boardElementRef}
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
-        width: "min(100%, min(80vh, 800px))",
-      }}
-      draggable={false}
-    >
-      {pieceElements}
-      {squareElements}
-      {isPromoting ? (
-        <Promotion
-          team={0}
-          width={boardElementRef.current?.offsetWidth!}
-          x={lastMove.from.x}
-          setPromotionPiece={promotePiece}
-        />
-      ) : null}
-      <div style={{ gridColumn: "1 / -1", textAlign: "center", fontSize: "2rem" }}>
-        <p>{whosTurn === 0 ? "White's turn" : "Black's turn"}</p>
-        <p>Eval: {Math.round(score! * 10) / 10}</p>
-        <p>Checks: {checkCount.toLocaleString()}</p>
-        <p>Depth: {depth}</p>
-        <p>{`Time to think:  ${timeToThink}s`}</p>
-        <button onClick={() => setTimeToThink((prev: any) => (prev > 0.5 ? prev - 0.5 : 0.5))}>-</button>
-        <button onClick={() => setTimeToThink((prev: any) => prev + 0.5)}>+</button>
-        <button onClick={reset}>Reset</button>
+    <div className="chess-wrapper">
+      <EvalBar evaluation={score} height={boardElementRef.current?.offsetWidth!} />
+      <div
+        ref={boardElementRef}
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
+          width: "min(100%, min(80vh, 800px))",
+        }}
+        draggable={false}
+      >
+        {pieceElements}
+        {squareElements}
+        {isPromoting ? (
+          <Promotion
+            team={0}
+            width={boardElementRef.current?.offsetWidth!}
+            x={lastMove.from.x}
+            setPromotionPiece={promotePiece}
+          />
+        ) : null}
+        <div style={{ gridColumn: "1 / -1", textAlign: "center", fontSize: "2rem" }}>
+          <p>{whosTurn === 0 ? "White's turn" : "Black's turn"}</p>
+          <p>Checks: {checkCount.toLocaleString()}</p>
+          <p>Depth: {depth}</p>
+          <p>{`Time to think:  ${timeToThink}s`}</p>
+          <button onClick={() => setTimeToThink((prev: any) => (prev > 0.5 ? prev - 0.5 : 0.5))}>-</button>
+          <button onClick={() => setTimeToThink((prev: any) => prev + 0.5)}>+</button>
+          <button onClick={reset}>Reset</button>
+          {/* <button onClick={() => setScore(Math.random() * 50 - 25)}>evaltest</button> */}
+        </div>
       </div>
     </div>
   );

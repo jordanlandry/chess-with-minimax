@@ -19,6 +19,9 @@ type Props = {
 
   selectedX: number | undefined;
   selectedY: number | undefined;
+
+  offsetX: number;
+  offsetY: number;
 };
 
 export default function Square({
@@ -38,6 +41,9 @@ export default function Square({
   selectedY,
 
   holdingPiece,
+
+  offsetX,
+  offsetY,
 }: Props) {
   const [hoverX, setHoverX] = useState(-1);
   const [hoverY, setHoverY] = useState(-1);
@@ -60,10 +66,6 @@ export default function Square({
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [holdingPiece]);
-
-  if (movedToX === y && movedToY === x) {
-    console.log(x, y);
-  }
 
   const showYellow =
     (selectedY === x && selectedX === y) || (movedFromX == y && movedFromY == x) || (movedToX === y && movedToY === x);
@@ -111,8 +113,8 @@ export default function Square({
             backgroundColor: colors.movedTo,
             height: width,
             width: width,
-            left: `${y * width}px`,
-            top: `${x * width}px`,
+            left: `${y * width + offsetX}px`,
+            top: `${x * width + offsetY}px`,
           }}
         />
       ) : null}

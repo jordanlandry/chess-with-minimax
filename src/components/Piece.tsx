@@ -13,14 +13,17 @@ export default function Piece({
   setGrabbedPiece,
   grabbedPiece,
   moveToSquareFunction,
+  isSelected,
+  offsetX,
+  offsetY,
 }: any) {
   const style = useContext(PieceStyleContext);
   const img = "./assets/images/styles/" + style + "/" + type + team + ".png";
 
   const animationTime = 1000; // ms
 
-  const [xPos, setXPos] = useState((x * width) / 8);
-  const [yPos, setYPos] = useState((y * width) / 8);
+  const [xPos, setXPos] = useState((x * width) / 8 + offsetX);
+  const [yPos, setYPos] = useState((y * width) / 8 + offsetY);
   const [mouseDown, setMouseDown] = useState(grabbedPiece === id);
 
   const handleMouseDown = () => {
@@ -50,8 +53,8 @@ export default function Piece({
     const newX = e.clientX - width / 16;
     const newY = e.clientY - width / 16;
 
-    setXPos(clamp(newX, -width / 16, width - width / 16));
-    setYPos(clamp(newY, -width / 16, width - width / 16));
+    setXPos(clamp(newX, -width / 16, width - width / 16) + offsetX);
+    setYPos(clamp(newY, -width / 16, width - width / 16) + offsetY);
   };
 
   return (
