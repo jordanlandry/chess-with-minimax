@@ -53,6 +53,10 @@ export default function Chess() {
   const [lastMove, setLastMove] = useState<any>();
   const [depth, setDepth] = useState(0);
 
+  const [doAlphaBeta, setDoAlphaBeta] = useLocalStorage("doAlphaBeta", true);
+  const [doMoveOrdering, setDoMoveOrdering] = useLocalStorage("doMoveOrdering", true);
+  const [showMinimaxDetails, setShowMinimaxDetails] = useLocalStorage("showMinimaxDetails", false);
+
   const [boardHistory, setBoardHistory] = useLocalStorage("boardHistory", [STARTING_POSITION]);
   const [boardHistoryIndex, setBoardHistoryIndex] = useState(0);
 
@@ -174,7 +178,7 @@ export default function Chess() {
 
     // Timeout because the board needs to update before the AI can make a move
     setTimeout(() => {
-      const move = getBestMove([...board], timeToThink * 1000, setDepth);
+      const move = getBestMove([...board], timeToThink * 1000, doAlphaBeta, doMoveOrdering);
 
       if (move.to.y === 7 && move.piece === "P") {
         promotePiece("Q", move.to.x, move.to.y);
@@ -343,38 +347,64 @@ export default function Chess() {
 
   // ~~~ RENDER ~~~ \\
   return (
-    <div className="chess-wrapper">
-      <EvalBar evaluation={score} height={boardElementRef.current?.offsetWidth!} />
-      <div
-        ref={boardElementRef}
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
-          width: "min(calc(100% - 31px), min(80vh, 800px))",
-        }}
-        draggable={false}
-      >
-        {pieceElements}
-        {squareElements}
-        {isPromoting ? (
-          <Promotion
-            team={0}
-            width={boardElementRef.current?.offsetWidth!}
-            x={lastMove.from.x}
-            setPromotionPiece={promotePiece}
-          />
-        ) : null}
-        <div style={{ gridColumn: "1 / -1", textAlign: "center", fontSize: "2rem" }}>
+    <>
+      <div className="chess-wrapper">
+        <EvalBar evaluation={score} height={boardElementRef.current?.offsetWidth!} />
+        <div
+          ref={boardElementRef}
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
+            width: "min(calc(100% - 31px), min(80vh, 800px))",
+          }}
+          draggable={false}
+        >
+          {pieceElements}
+          {squareElements}
+          {isPromoting ? (
+            <Promotion
+              team={0}
+              width={boardElementRef.current?.offsetWidth!}
+              x={lastMove.from.x}
+              setPromotionPiece={promotePiece}
+            />
+          ) : null}
+        </div>
+      </div>
+      <button onClick={reset}>New Game</button>
+      <button onClick={() => setShowMinimaxDetails((prev: boolean) => !prev)}>
+        {showMinimaxDetails ? "Hide" : "Show"} Minimax Details
+      </button>
+      {showMinimaxDetails ? (
+        <div style={{ gridColumn: "1 / -1", fontSize: "1.2rem" }}>
           <p>{whosTurn === 0 ? "White's turn" : "Black's turn"}</p>
           <p>Checks: {checkCount.toLocaleString()}</p>
           <p>Depth: {depth}</p>
+          <p>Minimax Settings</p>
+          <hr />
           <p>{`Time to think:  ${timeToThink}s`}</p>
           <button onClick={() => setTimeToThink((prev: any) => (prev > 0.5 ? prev - 0.5 : 0.5))}>-</button>
           <button onClick={() => setTimeToThink((prev: any) => prev + 0.5)}>+</button>
-          <button onClick={reset}>Reset</button>
-          {/* <button onClick={() => setScore(Math.random() * 50 - 25)}>evaltest</button> */}
+
+          <div>
+            <input
+              type="checkbox"
+              id="alpha-beta-input"
+              checked={doAlphaBeta}
+              onChange={() => setDoAlphaBeta((prev: boolean) => !prev)}
+            />
+            <label htmlFor="alpha-beta-input">Alpha-Beta Pruning</label>
+            <br />
+            <input
+              id="move-ordering-input"
+              type="checkbox"
+              checked={doMoveOrdering}
+              onChange={() => setDoMoveOrdering((prev: boolean) => !prev)}
+            />
+            <label htmlFor="move-ordering-input">Move Ordering</label>
+          </div>
         </div>
-      </div>
-    </div>
+      ) : null}
+    </>
   );
 }

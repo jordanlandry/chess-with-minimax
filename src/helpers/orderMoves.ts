@@ -7,10 +7,14 @@ export default function orderMoves(
   board: string[][],
   availableMoves: any,
   isMaximizing: boolean,
-  currentBestMove: any
+  currentBestMove: any,
+  doMoveOrdering: boolean
 ) {
   const confidence = new Array(availableMoves.length).fill(0);
   const newAvailableMoves = [...availableMoves];
+
+  // If move ordering is disabled, return the original array
+  if (!doMoveOrdering) return availableMoves;
 
   // Check if you can capture a piece with high value
   for (let i = 0; i < availableMoves.length; i++) {
