@@ -11,10 +11,10 @@ export default function EvalBar({ evaluation, height }: Props) {
   return (
     <div className="eval-bar-wrapper" style={{ height: height, width: "30px" }}>
       <div className="eval-negative eval-bar" style={{ height: `${(1 - percentPositive) * height}px` }}>
-        {evaluation < 0 ? <span className="eval-text">{Math.round(evaluation * 10) / -10}</span> : null}
+        {evaluation <= 0 ? <span className="eval-text">{Math.round(evaluation * 10) / -10}</span> : null}
       </div>
       <div className="eval-positive eval-bar" style={{ height: "100%", transition: "200ms" }}>
-        {evaluation > 0 ? <span className="eval-text">{Math.round(evaluation * 10) / 10}</span> : null}
+        {evaluation >= 0 ? <span className="eval-text">{Math.round(evaluation * 10) / 10}</span> : null}
       </div>
     </div>
   );
