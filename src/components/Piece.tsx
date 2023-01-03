@@ -53,8 +53,8 @@ export default function Piece({
     const newX = e.clientX - width / 16;
     const newY = e.clientY - width / 16;
 
-    setXPos(clamp(newX, -width / 16, width - width / 16) + offsetX);
-    setYPos(clamp(newY, -width / 16, width - width / 16) + offsetY);
+    setXPos(clamp(newX, -width / 16, width - width / 16));
+    setYPos(clamp(newY, -width / 16, width - width / 16));
   };
 
   return (

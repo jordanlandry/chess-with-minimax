@@ -56,8 +56,8 @@ export default function Square({
     }
 
     const handleMouseMove = (e: MouseEvent) => {
-      const newX = Math.floor(e.clientX / width);
-      const newY = Math.floor(e.clientY / width);
+      const newX = Math.floor((e.clientX - offsetX) / width);
+      const newY = Math.floor((e.clientY - offsetY) / width);
 
       setHoverX(newX);
       setHoverY(newY);
