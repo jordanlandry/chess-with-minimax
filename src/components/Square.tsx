@@ -60,8 +60,8 @@ export default function Square({
       className={`${x}-${y}`}
       onClick={() => onClick(x, y)}
       style={{
-        width: "100%",
-        aspectRatio: "1/1",
+        width: width,
+        height: width,
         backgroundColor: color,
         display: "flex",
         justifyContent: "center",
