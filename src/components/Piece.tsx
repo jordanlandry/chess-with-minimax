@@ -37,13 +37,13 @@ export default function Piece({
   const handleMouseUp = (e: MouseEvent) => {
     setMouseDown(false);
     setGrabbedPiece(-1);
+    // // Move the piece to the position of the mouse
+    const newX = Math.floor((e.clientX - offsetX) / (width / 8));
+    const newY = Math.floor((e.clientY - offsetY) / (width / 8));
 
-    // Move the piece to the position of the mouse
-    const newX = Math.floor(e.clientX / (width / 8));
-    const newY = Math.floor(e.clientY / (width / 8));
+    console.log(newX, x, newY, y);
 
     if (newX === x && newY === y) return;
-
     moveToSquareFunction(newY, newX);
   };
 

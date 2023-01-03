@@ -350,7 +350,7 @@ export default function Chess() {
         style={{
           display: "grid",
           gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
-          width: "min(calc(100% - 30px), min(80vh, 800px))",
+          width: "min(calc(100% - 31px), min(80vh, 800px))",
         }}
         draggable={false}
       >
