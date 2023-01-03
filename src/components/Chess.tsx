@@ -19,14 +19,15 @@ export default function Chess() {
   }
 
   // ~~~ HOOKS ~~~ \\
-  useWidth();
-  useHeight();
+  const width = useWidth();
+  const height = useHeight();
   useKeybind("Escape", () => setSelectedPiece(undefined));
   // ~~~ STATES ~~~ \\
   const [board, setBoard] = useLocalStorage(
     "position",
     STARTING_POSITION.map((row) => [...row])
   );
+
   const [squareElements, setSquareElements] = useState<any>([]);
   const [selectedPiece, setSelectedPiece] = useState<PositionType>();
   const [availableMoves, setAvailableMoves] = useState<MoveType[]>([]);
@@ -108,7 +109,7 @@ export default function Chess() {
     }
 
     setSquareElements(squareElements);
-  }, [availableMoves, grabbedPiece]);
+  }, [availableMoves, grabbedPiece, width, height]);
 
   // ~~~ AVAILABLE MOVES ~~~ \\
   useEffect(() => {
