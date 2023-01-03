@@ -81,7 +81,7 @@ export default function Square({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        boxShadow: hoverX === y && hoverY === x ? `inset 0 0 0 ${width / 10}px rgba(255, 255, 255, 0.5)` : "none",
+        boxShadow: hoverX === y && hoverY === x ? `inset 0 0 0 ${width / 16}px rgba(255, 255, 255, 0.5)` : "none",
       }}
     >
       {isOvertakeSquare ? (

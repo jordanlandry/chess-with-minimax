@@ -24,10 +24,7 @@ export default function Chess() {
   const height = useHeight();
   useKeybind("Escape", () => setSelectedPiece(undefined));
   // ~~~ STATES ~~~ \\
-  const [board, setBoard] = useLocalStorage(
-    "position",
-    STARTING_POSITION.map((row) => [...row])
-  );
+  const [board, setBoard] = useLocalStorage("board", STARTING_POSITION);
 
   const [squareElements, setSquareElements] = useState<any>([]);
   const [selectedPiece, setSelectedPiece] = useState<PositionType>();
@@ -323,7 +320,18 @@ export default function Chess() {
     setDepth(0);
     setCheckCount(0);
     setSquareElements([]);
-    setBoard(STARTING_POSITION);
+
+    // For some reason, it was not resetting the board properly so I had to do this
+    setBoard([
+      ["R", "N", "B", "Q", "K", "B", "N", "R"],
+      ["P", "P", "P", "P", "P", "P", "P", "P"],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["p", "p", "p", "p", "p", "p", "p", "p"],
+      ["r", "n", "b", "q", "k", "b", "n", "r"],
+    ]);
   };
 
   // ~~~ DRAG AND DROP ~~~ \\
@@ -375,9 +383,9 @@ export default function Chess() {
       <button onClick={() => setShowMinimaxDetails((prev: boolean) => !prev)}>
         {showMinimaxDetails ? "Hide" : "Show"} Minimax Details
       </button>
+      <p>{whosTurn === 0 ? "White's turn" : "Black's turn"}</p>
       {showMinimaxDetails ? (
         <div style={{ gridColumn: "1 / -1", fontSize: "1.2rem" }}>
-          <p>{whosTurn === 0 ? "White's turn" : "Black's turn"}</p>
           <p>Checks: {checkCount.toLocaleString()}</p>
           <p>Depth: {depth}</p>
           <p>Minimax Settings</p>
