@@ -1,8 +1,14 @@
 import { PositionType } from "../data/interfaces";
+import lookForCheck from "./lookForCheck";
 
-export default function getAvailableMoves(board: string[][], piece: string, x: number, y: number) {
+export default function getAvailableMoves(
+  board: string[][],
+  piece: string,
+  x: number,
+  y: number,
+  lookingForCheck: boolean = false
+) {
   const availableMoves: any = [];
-
   const currentColor = piece === piece.toUpperCase() ? "white" : "black";
 
   // ~~~ WHITE PAWN ~~~ \\
@@ -82,8 +88,6 @@ export default function getAvailableMoves(board: string[][], piece: string, x: n
         break;
       } else break;
     }
-
-    // TODO Castling
   }
 
   // ~~~ KNIGHT ~~~ \\
@@ -152,6 +156,7 @@ export default function getAvailableMoves(board: string[][], piece: string, x: n
         } else break;
       } else break;
     }
+
     // Bottom Left
     for (let i = 1; i <= 7; i++) {
       if (board[y + i] && board[y + i][x - i] !== undefined) {
@@ -232,7 +237,10 @@ export default function getAvailableMoves(board: string[][], piece: string, x: n
 
   // Check if the move will result in a check for the player who's turn it is if not, push the move to the array
   function tryMove(x: number, y: number, isCastle?: boolean) {
-    // TODO Check if the move will result in a check for the player who's turn it is
+    if (lookForCheck(board, currentColor, x, y, piece)) {
+      return;
+    }
+
     availableMoves.push({ x, y, isCastle });
   }
 
@@ -241,4 +249,14 @@ export default function getAvailableMoves(board: string[][], piece: string, x: n
   }
 
   return availableMoves;
+}
+
+export function findPiece(board: string[][], piece: string) {
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      if (board[i][j] === piece) return { x: j, y: i };
+    }
+  }
+
+  return { x: -1, y: -1 };
 }
