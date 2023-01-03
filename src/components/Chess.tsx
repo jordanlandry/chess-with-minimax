@@ -109,7 +109,7 @@ export default function Chess() {
     }
 
     setSquareElements(squareElements);
-  }, [availableMoves, grabbedPiece, width, height]);
+  }, [availableMoves, grabbedPiece, width, height, lastMove]);
 
   // ~~~ AVAILABLE MOVES ~~~ \\
   useEffect(() => {
@@ -161,8 +161,9 @@ export default function Chess() {
     // Check for openings
     const openingMove = openings(board.map((b: any) => b));
     if (openingMove) {
-      moveFrom(openingMove.from.x, openingMove.from.y, openingMove.to.x, openingMove.to.y);
-      // setScore(openingMove.name);
+      setTimeout(() => {
+        moveFrom(openingMove.from.x, openingMove.from.y, openingMove.to.x, openingMove.to.y);
+      }, timeToThink * 1000);
       return;
     }
 
@@ -289,7 +290,7 @@ export default function Chess() {
   const reset = () => {
     setWhosTurn(0);
     setMoveCount(0);
-    setLastMove({ from: { x: 0, y: 0 }, to: { x: 0, y: 0 } });
+    setLastMove({ from: { x: -1, y: -1 }, to: { x: -1, y: -1 } });
     setWhiteKingHasMoved(false);
     setBlackKingHasMoved(false);
     setWhiteLeftRookHasMoved(false);

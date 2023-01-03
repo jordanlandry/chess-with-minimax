@@ -6,8 +6,8 @@ export const colors = {
   selected: "rgba(255, 180, 180, 0.75)",
   hover: "rgba(255, 180, 180, 0.5)",
 
-  movedTo: "rgba(255, 255, 0, 0.25)",
-  movedFrom: "rgba(255, 255, 0, 0.25)",
+  movedTo: "rgba(255, 255, 0, 0.5)",
+  movedFrom: "rgba(255, 255, 0, 0.5)",
 };
 
 export const BOARD_SIZE = 8;

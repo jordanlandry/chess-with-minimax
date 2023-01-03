@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { colors } from "../data/properties";
 
 type Props = {
@@ -55,6 +55,10 @@ export default function Square({
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [holdingPiece]);
 
+  if (movedToX === y && movedToY === x) {
+    console.log(x, y);
+  }
+
   return (
     <div
       className={`${x}-${y}`}
@@ -66,7 +70,7 @@ export default function Square({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        boxShadow: hoverX === y && hoverY === x ? `inset 0 0 0 0.5rem rgba(255, 255, 255, 0.5)` : "none",
+        boxShadow: hoverX === y && hoverY === x ? `inset 0 0 0 ${width / 10}px rgba(255, 255, 255, 0.5)` : "none",
       }}
     >
       {isOvertakeSquare ? (
@@ -87,6 +91,31 @@ export default function Square({
             backgroundColor: colors.availableMove,
             width: "33%",
             borderRadius: "50%",
+          }}
+        />
+      ) : null}
+
+      {movedToX === y && movedToY === x ? (
+        <div
+          style={{
+            position: "absolute",
+            backgroundColor: colors.movedTo,
+            height: width,
+            width: width,
+            left: `${y * width}px`,
+            top: `${x * width}px`,
+          }}
+        />
+      ) : null}
+      {movedFromX === y && movedFromY === x ? (
+        <div
+          style={{
+            position: "absolute",
+            backgroundColor: colors.movedFrom,
+            height: width,
+            width: width,
+            left: `${y * width}px`,
+            top: `${x * width}px`,
           }}
         />
       ) : null}
