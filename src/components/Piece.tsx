@@ -41,8 +41,6 @@ export default function Piece({
     const newX = Math.floor((e.clientX - offsetX) / (width / 8));
     const newY = Math.floor((e.clientY - offsetY) / (width / 8));
 
-    console.log(newX, x, newY, y);
-
     if (newX === x && newY === y) return;
     moveToSquareFunction(newY, newX);
   };
@@ -53,8 +51,8 @@ export default function Piece({
     const newX = e.clientX - width / 16;
     const newY = e.clientY - width / 16;
 
-    setXPos(clamp(newX, -width / 16, width - width / 16));
-    setYPos(clamp(newY, -width / 16, width - width / 16));
+    setXPos(clamp(newX, -width / 16 + offsetX, width - width / 16 + offsetX));
+    setYPos(clamp(newY, -width / 16 + offsetY, width - width / 16 + offsetY));
   };
 
   return (
