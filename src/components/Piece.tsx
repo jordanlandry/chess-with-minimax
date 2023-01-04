@@ -13,7 +13,6 @@ export default function Piece({
   setGrabbedPiece,
   grabbedPiece,
   moveToSquareFunction,
-  isSelected,
   offsetX,
   offsetY,
 }: any) {

@@ -33,7 +33,7 @@ export default function lookForCheck(board: string[][], currentColor: string, x:
     if (inBounds(kingX + 1, kingY - 1) && tempBoard[kingY - 1][kingX + 1] === "P") return true;
   }
 
-  // Look for knight
+  // ~~~ KNIGHT ~~~ \\
   const knightMoves = [
     { x: 1, y: 2 },
     { x: 2, y: 1 },
@@ -54,8 +54,7 @@ export default function lookForCheck(board: string[][], currentColor: string, x:
       return true;
   }
 
-  // Diagonal
-
+  // ~~~ DIAGONAL ~~~ \\
   let upRight = true;
   let upLeft = true;
   let downRight = true;
@@ -98,51 +97,95 @@ export default function lookForCheck(board: string[][], currentColor: string, x:
     }
   }
 
-  let up = true;
-  let down = true;
-  let right = true;
-  let left = true;
-  // Straight
+  // ~~~ STRAIGHT ~~~ \\
+  // Up
   for (let i = 1; i < 8; i++) {
-    // Up
     let x = kingX;
     let y = kingY - i;
 
-    if (inBounds(x, y) && up) {
+    if (inBounds(x, y)) {
       if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
       if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
-      if (tempBoard[y][x] !== "") up = false;
-    }
-
-    // Down
-    x = kingX;
-    y = kingY + i;
-    if (inBounds(x, y) && down) {
-      if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
-      if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
-      if (tempBoard[y][x] !== "") down = false;
-    }
-
-    // Right
-    x = kingX + i;
-    y = kingY;
-    if (inBounds(x, y) && right) {
-      if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
-      if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
-      if (tempBoard[y][x] !== "") right = false;
-    }
-
-    // Left
-    x = kingX - i;
-    y = kingY;
-    if (inBounds(x, y) && left) {
-      if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
-      if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
-      if (tempBoard[y][x] !== "") left = false;
     }
   }
 
-  // King
+  // Down
+  for (let i = 1; i < 8; i++) {
+    let x = kingX;
+    let y = kingY + i;
+
+    if (inBounds(x, y)) {
+      if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
+      if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
+    }
+  }
+
+  // Right
+  for (let i = 1; i < 8; i++) {
+    let x = kingX + i;
+    let y = kingY;
+
+    if (inBounds(x, y)) {
+      if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
+      if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
+    }
+  }
+
+  // Left
+  for (let i = 1; i < 8; i++) {
+    let x = kingX - i;
+    let y = kingY;
+
+    if (inBounds(x, y)) {
+      if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
+      if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
+    }
+  }
+
+  // Straight
+  // for (let i = 1; i < 8; i++) {
+  //   // Up
+  //   let x = kingX;
+  //   let y = kingY - i;
+
+  //   if (inBounds(x, y) && up) {
+  //     if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
+  //     if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
+  //     if (tempBoard[y][x] !== "") up = true;
+  //   }
+
+  //   // Down
+  //   x = kingX;
+  //   y = kingY + i;
+  //   if (inBounds(x, y) && down) {
+  //     if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
+  //     if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
+  //     if (tempBoard[y][x] !== "") down = true;
+  //   }
+
+  //   // Right
+  //   x = kingX + i;
+  //   y = kingY;
+  //   if (inBounds(x, y) && right) {
+  //     if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
+  //     if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
+  //     if (tempBoard[y][x] !== "") right = true;
+  //   }
+
+  //   // Left
+  //   x = kingX - i;
+  //   y = kingY;
+
+  //   if (inBounds(x, y) && left) {
+  //     if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
+  //     if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
+  //     if (tempBoard[y][x] !== "") left = true;
+  //   }
+  // }
+
+  // For some reason rook and queen are not working when the king is in check from it and moves on the same axis as the piece
+
+  // ~~~ KING ~~~ \\
   const kingMoves = [
     { x: 1, y: 1 },
     { x: 1, y: 0 },

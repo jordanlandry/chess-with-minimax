@@ -78,12 +78,14 @@ export const pieceValues: { [key: string]: number } = {
   K: -100,
 };
 
+const checkMateScore = 1000000;
+
 function getGameState(board: string[][]) {
   const pieceCount = numberOfPieces(board);
 
   // Get gameWeights
   const earlyGameWeight = pieceCount / 32;
-  const midGameWeight = pieceCount;
+  const midGameWeight = pieceCount / 16;
   const endGameWeight = 8 / pieceCount;
 
   return [earlyGameWeight, midGameWeight, endGameWeight];
@@ -124,8 +126,6 @@ function getDoubledPawns(board: string[][], color: number) {
 
 function getPositionalScore(board: string[][]) {
   const [earlyGameWeight, midGameWeight, endGameWeight] = getGameState(board);
-
-  // console.log(earlyGameWeight);
 
   let score = 0;
   for (let i = 0; i < board.length; i++) {
@@ -196,13 +196,11 @@ function getPositionalScore(board: string[][]) {
 }
 
 export function evaluateBoard(board: string[][]) {
-  const [earlyGameWeight, midGameWeight, endGameWeight] = getGameState(board);
-
   const whiteMoves = getAllMoves(board, 0);
   const blackMoves = getAllMoves(board, 1);
 
-  if (whiteMoves.length === 0) return -1000000000; // White is in checkmate
-  if (blackMoves.length === 0) return 1000000000; // Black is in checkmate
+  if (whiteMoves.length === 0) return -checkMateScore; // White is in checkmate
+  if (blackMoves.length === 0) return checkMateScore; // Black is in checkmate
 
   let score = 0;
 
@@ -255,12 +253,21 @@ export function minimax(
     return bestMove;
   }
 
+  // If game is over
+  if (currentBestMove.score === checkMateScore || currentBestMove.score === -checkMateScore) return currentBestMove;
+
   // Time limit reached
   if (elapsedTime >= timeLimit) return null;
 
   // White is maximizing
   if (isMaximizing) {
     const allMoves = orderMoves(board, getAllMoves(board, 0), true, currentBestMove, doMoveOrdering);
+
+    if (allMoves.length === 0) {
+      bestMove.score = -checkMateScore;
+      return bestMove;
+    }
+
     let bestScore = -Infinity;
 
     // Go through all the moves
@@ -292,7 +299,7 @@ export function minimax(
       const prevEncounter = transpositionTable[boardToFen(board)];
       if (prevEncounter) return prevEncounter;
 
-      const nextEval = minimax(
+      const nextEval: any = minimax(
         board,
         depth - 1,
         false,
@@ -366,7 +373,7 @@ export function minimax(
       const prevEncounter = transpositionTable[boardToFen(board)];
       if (prevEncounter) return prevEncounter;
 
-      const nextEval = minimax(
+      const nextEval: any = minimax(
         board,
         depth - 1,
         true,
@@ -380,6 +387,10 @@ export function minimax(
 
       // Check if time limit reached
       if (!nextEval) return null;
+
+      if (nextEval.score === -checkMateScore) {
+        // console.log(nextEval);
+      }
 
       // Undo the move
       board = newBoard.map((row) => [...row]);
