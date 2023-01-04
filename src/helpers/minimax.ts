@@ -86,8 +86,8 @@ function getGameState(board: string[][]) {
   const pieceCount = numberOfPieces(board);
 
   // Get gameWeights
-  const midGameWeight = pieceCount / 24;
-  const endGameWeight = pieceCount / 16;
+  const midGameWeight = 16 / pieceCount;
+  const endGameWeight = 8 / pieceCount;
 
   return [midGameWeight, endGameWeight];
 }
@@ -108,21 +108,28 @@ function evaluateBoard(board: string[][]) {
 
       score += pieceValues[board[i][j]];
 
-      // Add positional score
-      if (board[i][j] === "p") score += 0.1 * (6 - i);
-      if (board[i][j] === "P") score -= 0.1 * i;
+      // Add positional score for midgame
+      if (board[i][j] === "p") score += 0.1 * (6 - i) * midGameWeight;
+      if (board[i][j] === "P") score -= 0.1 * i * midGameWeight;
 
-      if (board[i][j] === "n") score += 0.11 * (6 - i);
-      if (board[i][j] === "N") score -= 0.11 * i;
+      if (board[i][j] === "n") score += 0.11 * (6 - i) * midGameWeight;
+      if (board[i][j] === "N") score -= 0.11 * i * midGameWeight;
 
-      if (board[i][j] === "b") score += 0.11 * (6 - i);
-      if (board[i][j] === "B") score -= 0.11 * i;
+      if (board[i][j] === "b") score += 0.11 * (6 - i) * midGameWeight;
+      if (board[i][j] === "B") score -= 0.11 * i * midGameWeight;
 
-      if (board[i][j] === "r") score += 0.12 * (6 - i);
-      if (board[i][j] === "R") score -= 0.12 * i;
+      if (board[i][j] === "r") score += 0.12 * (6 - i) * midGameWeight;
+      if (board[i][j] === "R") score -= 0.12 * i * midGameWeight;
 
-      if (board[i][j] === "q") score += 0.13 * (6 - i);
-      if (board[i][j] === "Q") score -= 0.13 * i;
+      if (board[i][j] === "q") score += 0.13 * (6 - i) * midGameWeight;
+      if (board[i][j] === "Q") score -= 0.13 * i * midGameWeight;
+
+      // Positional score for endgame, you want the enemy king to be closer to the corners and edges
+      if (board[i][j] === "k") score += 0.1 * (6 - i) * endGameWeight;
+      if (board[i][j] === "K") score -= 0.1 * i * endGameWeight;
+
+      if (board[i][j] === "k") score += 0.1 * (6 - j) * endGameWeight;
+      if (board[i][j] === "K") score -= 0.1 * j * endGameWeight;
     }
   }
 

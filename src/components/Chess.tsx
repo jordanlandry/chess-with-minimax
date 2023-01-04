@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { PieceType, PositionType } from "../data/interfaces";
 import { BOARD_SIZE, colors, STARTING_POSITION } from "../data/properties";
 import getAvailableMoves from "../helpers/getAvailableMoves";
+import getMoveEvaluation from "../helpers/getMoveEvaluation";
 import { getBestMove } from "../helpers/minimax";
 import nextId from "../helpers/nextId";
 import openings from "../helpers/openings";
@@ -22,7 +23,9 @@ export default function Chess() {
   // ~~~ HOOKS ~~~ \\
   const width = useWidth();
   const height = useHeight();
+
   useKeybind("Escape", () => setSelectedPiece(undefined));
+
   // ~~~ STATES ~~~ \\
   const [board, setBoard] = useLocalStorage("board", STARTING_POSITION);
 
@@ -155,15 +158,10 @@ export default function Chess() {
   }, [selectedPiece]);
 
   // ~~~ HANDLE AI MOVES ~~~ \\
-  useEffect(() => {
-    // If it's not the AI's turn, return
-    if (whosTurn === 0) return;
-
-    // If the other person is promoting, return
-    if (isPromoting) return;
-
-    // If the game is over, return
-    // TODO
+  const handleAIMove = () => {
+    if (whosTurn === 0) return; // If it's not the AI's turn, return
+    if (isPromoting) return; // If the other person is promoting, return
+    if (moveCount === -1) return; // If the game is over, return TODO
 
     // Check for openings
     const openingMove = openings(board.map((b: any) => b));
@@ -175,42 +173,30 @@ export default function Chess() {
       return;
     }
 
-    // Timeout because the board needs to update before the AI can make a move
+    const prevScore = score;
+    const move = getBestMove([...board], timeToThink * 1000, doAlphaBeta, doMoveOrdering);
+    const newScore = move.score;
+
+    // After each move, check if it's a good move or a blunder etc.
+    setMoveEvaluation(getMoveEvaluation(prevScore, newScore));
+
+    // If the move is a promotion, promote the piece
+    if (move.to.y === 7 && move.piece === "P") {
+      promotePiece("Q", move.to.x, move.to.y);
+    }
+
+    if (move.from.x === -1) return;
+    moveFrom(move.from.x, move.from.y, move.to.x, move.to.y);
+
+    setDepth(move.depth ? move.depth : 0);
+    setScore(move.score ? move.score : 0);
+    setCheckCount(move.checkCount ? move.checkCount : 0);
+  };
+
+  useEffect(() => {
     setTimeout(() => {
-      const prevScore = score;
-      const move = getBestMove([...board], timeToThink * 1000, doAlphaBeta, doMoveOrdering);
-      const newScore = move.score;
-
-      const difference = newScore - prevScore;
-
-      // After each move, check if it's a good move or a blunder etc.
-      setMoveEvaluation(
-        difference < -2
-          ? "blunder"
-          : difference < -1
-          ? "mistake"
-          : difference < 0
-          ? "inaccuracy"
-          : difference < 1
-          ? "good"
-          : difference < 1.5
-          ? "great"
-          : difference < 2
-          ? "brilliant"
-          : "masterpiece"
-      );
-
-      if (move.to.y === 7 && move.piece === "P") {
-        promotePiece("Q", move.to.x, move.to.y);
-      }
-
-      if (move.from.x === -1) return;
-      moveFrom(move.from.x, move.from.y, move.to.x, move.to.y);
-
-      setDepth(move.depth ? move.depth : 0);
-      setScore(move.score ? move.score : 0);
-      setCheckCount(move.checkCount ? move.checkCount : 0);
-    }, 50);
+      handleAIMove();
+    }, 500);
   }, [whosTurn, isPromoting]);
 
   // ~~~ ELEMENTS ~~~ \\
@@ -238,9 +224,6 @@ export default function Chess() {
   });
 
   // ~~~ FUNCTIONS ~~~ \\
-  function animatePiece() {
-    if (!selectedPiece) return;
-  }
 
   function clickSquareToMove(y: number, x: number) {
     if (!selectedPiece) return;
@@ -273,10 +256,8 @@ export default function Chess() {
     setSelectedPiece(undefined);
   }
 
-  function moveFrom(x1: number, y1: number, x2: number, y2: number, changeTurn = true) {
-    // animatePiece();
+  async function moveFrom(x1: number, y1: number, x2: number, y2: number, changeTurn = true) {
     // AI Castle
-
     if (board[y1][x1] === "K" && !blackKingHasMoved) {
       setBlackKingHasMoved(true);
 
@@ -313,14 +294,14 @@ export default function Chess() {
     setMoveCount((moveCount) => moveCount + 1);
     setLastMove({ from: { x: x1, y: y1 }, to: { x: x2, y: y2 } });
 
-    if (changeTurn) setWhosTurn((whosTurn: number) => (whosTurn === 0 ? 1 : 0));
-
     if (board[y2][x2] === "k") setWhiteKingHasMoved(true);
     if (board[y2][x2] === "K") setBlackKingHasMoved(true);
     if (board[y2][x2] === "r" && y2 === 7 && x2 === 7) setWhiteLeftRookHasMoved(true);
     if (board[y2][x2] === "r" && y2 === 7 && x2 === 0) setWhiteRightRookHasMoved(true);
     if (board[y2][x2] === "R" && y2 === 0 && x2 === 7) setBlackLeftRookHasMoved(true);
     if (board[y2][x2] === "R" && y2 === 0 && x2 === 0) setBlackRightRookHasMoved(true);
+
+    setWhosTurn((prev: number) => (prev === 0 ? 1 : 0));
   }
 
   function handlePieceClick(piece: PieceType) {
@@ -366,6 +347,7 @@ export default function Chess() {
     setDepth(0);
     setCheckCount(0);
     setSquareElements([]);
+    setMoveEvaluation("");
 
     // For some reason, it was not resetting the board properly so I had to do this
     setBoard([
@@ -422,6 +404,7 @@ export default function Chess() {
               width={boardElementRef.current?.offsetWidth!}
               x={lastMove.from.x}
               setPromotionPiece={promotePiece}
+              offsetX={boardElementRef.current?.offsetLeft!}
             />
           ) : null}
         </div>
@@ -458,14 +441,14 @@ export default function Chess() {
               checked={doAlphaBeta}
               onChange={() => setDoAlphaBeta((prev: boolean) => !prev)}
             />
+            <label htmlFor="alpha-beta-input">Alpha-Beta Pruning</label>
+            <br />
             <input
               id="move-ordering-input"
               type="checkbox"
               checked={doMoveOrdering}
               onChange={() => setDoMoveOrdering((prev: boolean) => !prev)}
             />
-            <label htmlFor="alpha-beta-input">Alpha-Beta Pruning</label>
-            <br />
             <label htmlFor="move-ordering-input">Move Ordering</label>
           </div>
         </div>

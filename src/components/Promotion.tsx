@@ -6,9 +6,10 @@ type Props = {
   width: number;
   x: number;
   setPromotionPiece: any;
+  offsetX: number;
 };
 
-export default function Promotion({ team, width, x, setPromotionPiece }: Props) {
+export default function Promotion({ team, width, x, setPromotionPiece, offsetX }: Props) {
   const style = useContext(PieceStyleContext);
 
   const q = "./assets/images/styles/" + style + "/" + "q" + team + ".png";
@@ -22,7 +23,7 @@ export default function Promotion({ team, width, x, setPromotionPiece }: Props) 
         position: "absolute",
         backgroundColor: "rgba(240, 240, 240, 0.9)",
         height: `${width / 2}px`,
-        left: `${(width / 8) * x}px`,
+        left: `${(width / 8) * x + offsetX}px`,
         display: "flex",
         flexDirection: "column",
       }}

@@ -13,6 +13,7 @@ export default function orderMoves(
   const confidence = new Array(availableMoves.length).fill(0);
   const newAvailableMoves = [...availableMoves];
 
+  const multiplier = isMaximizing ? 1 : -1;
   // If move ordering is disabled, return the original array
   if (!doMoveOrdering) return availableMoves;
 
@@ -35,15 +36,18 @@ export default function orderMoves(
         currentBestMove.to.x === move.to.x &&
         currentBestMove.to.y === move.to.y
       )
-        confidence[i] += 5;
+        confidence[i] += 5 * multiplier;
     }
 
     // If you are developing a piece, increase the confidence slightly (this is a very small optimization)
-    if (move.piece === "P" && move.to.y > move.from.y) confidence[i] -= 0.5;
-    if (move.piece === "p" && move.to.y < move.from.y) confidence[i] += 0.5;
+    if (move.piece === "P" && move.to.y > move.from.y) confidence[i] += 0.5 * multiplier;
+    if (move.piece === "p" && move.to.y < move.from.y) confidence[i] += 0.5 * multiplier;
 
     // If you have a high value piece that is being attacked, increase the confidence of moving that piece
-    // TODO
+
+    // If you are going to promote a pawn, increase the confidence of that move
+    if (move.piece === "P" && move.to.y === 7) confidence[i] += 1 * multiplier;
+    if (move.piece === "p" && move.to.y === 0) confidence[i] += 1 * multiplier;
   }
 
   // Sort the moves by their confidence
