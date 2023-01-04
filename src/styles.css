@@ -2,6 +2,9 @@ body {
   margin: 0;
 
   font-family: "Montserrat", sans-serif;
+
+  background-color: rgb(50, 50, 50);
+  color: white;
 }
 
 p {
@@ -19,6 +22,14 @@ p {
 
 .chess-wrapper {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.eval-bar-wrapper {
+  position: relative;
+  width: 25px;
 }
 
 .eval-bar {
@@ -27,7 +38,7 @@ p {
   font-weight: bold;
   font-size: 0.8rem;
 
-  width: 30px;
+  width: 25px;
 }
 
 .eval-negative {
@@ -46,4 +57,92 @@ p {
 
 .eval-bar > * {
   padding: 0.5rem;
+}
+
+.move-eval-wrapper {
+  text-align: center;
+}
+
+.move-eval-text {
+  font-size: 2rem;
+  text-transform: capitalize;
+  text-align: center;
+}
+
+.book-text {
+  color: grey;
+}
+
+.blunder-text {
+  color: red;
+}
+
+.mistake-text {
+  color: orange;
+}
+
+.inaccuracy-text {
+  color: yellow;
+}
+
+.brilliant-text {
+  color: cyan;
+}
+
+.great-text {
+  color: greenyellow;
+}
+
+.best-text {
+  color: rgb(0, 100, 0);
+}
+
+.good-text {
+  color: rgb(0, 100, 0);
+}
+
+/* 
+  REFERENCE - https://alvarotrigo.com/blog/css-text-animations/ 
+  2nd in the list
+ */
+.masterpiece-text {
+  text-transform: uppercase;
+  background-image: linear-gradient(-225deg, #231557 0%, #44107a 29%, #ff1361 67%, #fff800 100%);
+  background-size: auto auto;
+  background-clip: border-box;
+  background-size: 200% auto;
+  color: #fff;
+  background-clip: text;
+  text-fill-color: transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textclip 2s linear infinite;
+  display: inline-block;
+}
+
+@keyframes textclip {
+  to {
+    background-position: 200% center;
+  }
+}
+
+button {
+  transition: 0.2s;
+  border: 2px solid white;
+  background-color: transparent;
+  color: white;
+
+  font-family: "Montserrat", sans-serif;
+  padding: 10px;
+}
+
+button:hover {
+  background-color: white;
+  color: black;
+}
+
+.button-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

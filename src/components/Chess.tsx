@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PieceType, PositionType } from "../data/interfaces";
 import { BOARD_SIZE, colors, STARTING_POSITION } from "../data/properties";
 import getAvailableMoves from "../helpers/getAvailableMoves";
@@ -53,6 +53,7 @@ export default function Chess() {
   const [doAlphaBeta, setDoAlphaBeta] = useLocalStorage("doAlphaBeta", true);
   const [doMoveOrdering, setDoMoveOrdering] = useLocalStorage("doMoveOrdering", true);
   const [showMinimaxDetails, setShowMinimaxDetails] = useLocalStorage("showMinimaxDetails", false);
+  const [moveEvaluation, setMoveEvaluation] = useState("");
 
   const [boardHistory, setBoardHistory] = useLocalStorage("boardHistory", [STARTING_POSITION]);
   const [boardHistoryIndex, setBoardHistoryIndex] = useState(0);
@@ -115,7 +116,7 @@ export default function Chess() {
     }
 
     setSquareElements(squareElements);
-  }, [availableMoves, grabbedPiece, width, height, lastMove]);
+  }, [availableMoves, grabbedPiece, width, height, lastMove, showMinimaxDetails]);
 
   // ~~~ AVAILABLE MOVES ~~~ \\
   useEffect(() => {
@@ -167,6 +168,7 @@ export default function Chess() {
     // Check for openings
     const openingMove = openings(board.map((b: any) => b));
     if (openingMove) {
+      setMoveEvaluation("book");
       setTimeout(() => {
         moveFrom(openingMove.from.x, openingMove.from.y, openingMove.to.x, openingMove.to.y);
       }, timeToThink * 1000);
@@ -175,7 +177,28 @@ export default function Chess() {
 
     // Timeout because the board needs to update before the AI can make a move
     setTimeout(() => {
+      const prevScore = score;
       const move = getBestMove([...board], timeToThink * 1000, doAlphaBeta, doMoveOrdering);
+      const newScore = move.score;
+
+      const difference = newScore - prevScore;
+
+      // After each move, check if it's a good move or a blunder etc.
+      setMoveEvaluation(
+        difference < -2
+          ? "blunder"
+          : difference < -1
+          ? "mistake"
+          : difference < 0
+          ? "inaccuracy"
+          : difference < 1
+          ? "good"
+          : difference < 1.5
+          ? "great"
+          : difference < 2
+          ? "brilliant"
+          : "masterpiece"
+      );
 
       if (move.to.y === 7 && move.piece === "P") {
         promotePiece("Q", move.to.x, move.to.y);
@@ -187,11 +210,10 @@ export default function Chess() {
       setDepth(move.depth ? move.depth : 0);
       setScore(move.score ? move.score : 0);
       setCheckCount(move.checkCount ? move.checkCount : 0);
-    }, 250);
+    }, 50);
   }, [whosTurn, isPromoting]);
 
   // ~~~ ELEMENTS ~~~ \\
-
   const pieceElements = board.map((row: any, i: number) => {
     return row.map((piece: any, j: number) => {
       return piece ? (
@@ -209,7 +231,7 @@ export default function Chess() {
           setGrabbedPiece={setGrabbedPiece}
           moveToSquareFunction={clickSquareToMove}
           offsetX={boardElementRef.current?.offsetLeft || 0}
-          offsetY={boardElementRef.current?.offsetTop || 0}
+          offsetY={0}
         />
       ) : null;
     });
@@ -252,7 +274,31 @@ export default function Chess() {
   }
 
   function moveFrom(x1: number, y1: number, x2: number, y2: number, changeTurn = true) {
-    animatePiece();
+    // animatePiece();
+    // AI Castle
+
+    if (board[y1][x1] === "K" && !blackKingHasMoved) {
+      setBlackKingHasMoved(true);
+
+      if (x2 === 6) {
+        const newBoard = [...board];
+        newBoard[0][5] = "R";
+        newBoard[0][7] = "";
+        setBoard(newBoard);
+
+        setBlackRightRookHasMoved(true);
+      }
+
+      if (x2 === 2) {
+        const newBoard = [...board];
+        newBoard[0][3] = "R";
+        newBoard[0][0] = "";
+        setBoard(newBoard);
+
+        setBlackLeftRookHasMoved(true);
+      }
+    }
+
     // Play audio
     const audio =
       board[y2][x2] === "" ? new Audio("./assets/sounds/move-self.mp3") : new Audio("./assets/sounds/capture.mp3");
@@ -359,11 +405,12 @@ export default function Chess() {
       <div className="chess-wrapper">
         <EvalBar evaluation={score} height={boardElementRef.current?.offsetWidth!} />
         <div
+          className="chess-board"
           ref={boardElementRef}
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
-            width: "min(calc(100% - 31px), min(80vh, 800px))",
+            width: "min(calc(90%), min(80vh, 800px))",
           }}
           draggable={false}
         >
@@ -379,20 +426,30 @@ export default function Chess() {
           ) : null}
         </div>
       </div>
-      <button onClick={reset}>New Game</button>
-      <button onClick={() => setShowMinimaxDetails((prev: boolean) => !prev)}>
-        {showMinimaxDetails ? "Hide" : "Show"} Minimax Details
-      </button>
-      <p>{whosTurn === 0 ? "White's turn" : "Black's turn"}</p>
+
+      <div className="move-eval-wrapper">
+        <p className={`${moveEvaluation}-text move-eval-text`}>{moveEvaluation ? moveEvaluation : "Move evaluation"}</p>
+      </div>
+
+      <p style={{ textAlign: "center", margin: "10px 0" }}>{whosTurn === 0 ? "White's turn" : "Black's turn"}</p>
+      <div className="button-wrapper">
+        <button onClick={reset}>New Game</button>
+        <button onClick={() => setShowMinimaxDetails((prev: boolean) => !prev)}>
+          {showMinimaxDetails ? "Hide" : "Show"} Minimax Details
+        </button>
+      </div>
+
       {showMinimaxDetails ? (
-        <div style={{ gridColumn: "1 / -1", fontSize: "1.2rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", width: "250px", margin: "auto", marginTop: "10px" }}>
           <p>Checks: {checkCount.toLocaleString()}</p>
           <p>Depth: {depth}</p>
           <p>Minimax Settings</p>
-          <hr />
           <p>{`Time to think:  ${timeToThink}s`}</p>
-          <button onClick={() => setTimeToThink((prev: any) => (prev > 0.5 ? prev - 0.5 : 0.5))}>-</button>
-          <button onClick={() => setTimeToThink((prev: any) => prev + 0.5)}>+</button>
+
+          <div style={{ display: "flex" }}>
+            <button onClick={() => setTimeToThink((prev: any) => (prev > 0.5 ? prev - 0.5 : 0.5))}>-</button>
+            <button onClick={() => setTimeToThink((prev: any) => prev + 0.5)}>+</button>
+          </div>
 
           <div>
             <input
@@ -401,14 +458,14 @@ export default function Chess() {
               checked={doAlphaBeta}
               onChange={() => setDoAlphaBeta((prev: boolean) => !prev)}
             />
-            <label htmlFor="alpha-beta-input">Alpha-Beta Pruning</label>
-            <br />
             <input
               id="move-ordering-input"
               type="checkbox"
               checked={doMoveOrdering}
               onChange={() => setDoMoveOrdering((prev: boolean) => !prev)}
             />
+            <label htmlFor="alpha-beta-input">Alpha-Beta Pruning</label>
+            <br />
             <label htmlFor="move-ordering-input">Move Ordering</label>
           </div>
         </div>

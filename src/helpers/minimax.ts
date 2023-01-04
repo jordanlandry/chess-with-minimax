@@ -1,7 +1,6 @@
-import { useEffect } from "react";
 import boardToFen from "./boardToFen";
-import { database } from "./database";
 import getAvailableMoves from "./getAvailableMoves";
+import numberOfPieces from "./numberOfPieces";
 import orderMoves from "./orderMoves";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -13,7 +12,6 @@ interface MoveDatabase {
 // const transpositionTable: MoveDatabase = {};
 
 let checkCount = 0;
-
 let transpositionTable: MoveDatabase = {};
 
 let startTime = 0;
@@ -79,7 +77,30 @@ export const pieceValues: { [key: string]: number } = {
   K: -100,
 };
 
+const gameWeights = {
+  endGame: 16,
+  midGame: 24,
+};
+
+function getGameState(board: string[][]) {
+  const pieceCount = numberOfPieces(board);
+
+  // Get gameWeights
+  const midGameWeight = pieceCount / 24;
+  const endGameWeight = pieceCount / 16;
+
+  return [midGameWeight, endGameWeight];
+}
+
 function evaluateBoard(board: string[][]) {
+  const [midGameWeight, endGameWeight] = getGameState(board);
+
+  const whiteMoves = getAllMoves(board, 0);
+  const blackMoves = getAllMoves(board, 1);
+
+  if (whiteMoves.length === 0) return -1000000000; // White is in checkmate
+  if (blackMoves.length === 0) return 1000000000; // Black is in checkmate
+
   let score = 0;
   for (let i = 0; i < board.length; i++) {
     for (let j = 0; j < board[i].length; j++) {
@@ -102,9 +123,6 @@ function evaluateBoard(board: string[][]) {
 
       if (board[i][j] === "q") score += 0.13 * (6 - i);
       if (board[i][j] === "Q") score -= 0.13 * i;
-
-      // if (board[i][j] === "k") score += 0.1 * (6 - i);
-      // if (board[i][j] === "K") score -= 0.1 * i;
     }
   }
 
