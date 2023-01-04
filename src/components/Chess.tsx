@@ -50,20 +50,32 @@ export default function Chess() {
 
   // MINIMAX STATES
   const [timeToThink, setTimeToThink] = useLocalStorage("aiTimeToThink", 2.5); // In Seconds
-  const [score, setScore] = useState<number>(0);
+  const [score, setScore] = useLocalStorage("minMaxScore", 0);
   const [checkCount, setCheckCount] = useState(0);
-  const [lastMove, setLastMove] = useState<any>();
+  const [lastMove, setLastMove] = useLocalStorage("lastMove", undefined);
   const [depth, setDepth] = useState(0);
 
   const [doAlphaBeta, setDoAlphaBeta] = useLocalStorage("doAlphaBeta", true);
   const [doMoveOrdering, setDoMoveOrdering] = useLocalStorage("doMoveOrdering", true);
   const [showMinimaxDetails, setShowMinimaxDetails] = useLocalStorage("showMinimaxDetails", false);
-  const [moveEvaluation, setMoveEvaluation] = useState("");
+
+  const [moveEvaluation, setMoveEvaluation] = useLocalStorage("moveEvaluation", "");
+
+  // This will be temporary until I add board history so you can go back and see the evaluation of each move after the game is over
+  const [moveEvalCounts, setMoveEvalCounts] = useLocalStorage("moveEvaluationCounts", {
+    book: 0,
+    innacuracy: 0,
+    blunder: 0,
+    mistake: 0,
+    good: 0,
+    brilliant: 0,
+    masterful: 0,
+  });
 
   const [boardHistory, setBoardHistory] = useLocalStorage("boardHistory", [STARTING_POSITION]);
   const [boardHistoryIndex, setBoardHistoryIndex] = useState(0);
 
-  const [moveCount, setMoveCount] = useState(0);
+  const [moveCount, setMoveCount] = useLocalStorage("moveCount", 0);
 
   // PIECE STATES
   const [grabbedPiece, setGrabbedPiece] = useState(-1);
@@ -287,7 +299,7 @@ export default function Chess() {
 
     setBoard(newBoard);
     setSelectedPiece(undefined);
-    setMoveCount((moveCount) => moveCount + 1);
+    setMoveCount((moveCount: any) => moveCount + 1);
     setLastMove({ from: { x: x1, y: y1 }, to: { x: x2, y: y2 } });
 
     // if (board[y2][x2] === "k") setWhiteKingHasMoved(true);
@@ -357,26 +369,26 @@ export default function Chess() {
     setMoveEvaluation("");
 
     // For some reason, it was not resetting the board properly so I had to do this
-    setBoard([
-      ["R", "N", "B", "Q", "K", "B", "N", "R"],
-      ["P", "P", "P", "P", "P", "P", "P", "P"],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["p", "p", "p", "p", "p", "p", "p", "p"],
-      ["r", "n", "b", "q", "k", "b", "n", "r"],
-    ]);
     // setBoard([
-    //   ["R", "", "", "", "K", "", "", "R"],
-    //   ["", "", "", "", "", "", "", ""],
-    //   ["", "", "", "", "", "r", "r", ""],
-    //   ["", "", "", "", "", "", "", ""],
+    //   ["R", "N", "B", "Q", "K", "B", "N", "R"],
+    //   ["P", "P", "P", "P", "P", "P", "P", "P"],
     //   ["", "", "", "", "", "", "", ""],
     //   ["", "", "", "", "", "", "", ""],
     //   ["", "", "", "", "", "", "", ""],
-    //   ["", "", "", "r", "r", "", "k", ""],
+    //   ["", "", "", "", "", "", "", ""],
+    //   ["p", "p", "p", "p", "p", "p", "p", "p"],
+    //   ["r", "n", "b", "q", "k", "b", "n", "r"],
     // ]);
+    setBoard([
+      ["", "", "", "", "", "", "", "R"],
+      ["", "K", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["k", "", "", "", "", "", "", "r"],
+    ]);
   };
 
   // ~~~ DRAG AND DROP ~~~ \\

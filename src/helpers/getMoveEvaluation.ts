@@ -13,5 +13,5 @@ export default function getMoveEvaluation(prev: number, newVal: number) {
     ? "great"
     : difference < 2
     ? "brilliant"
-    : "masterpiece";
+    : "masterful";
 }

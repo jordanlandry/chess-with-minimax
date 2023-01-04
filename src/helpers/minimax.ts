@@ -82,8 +82,8 @@ function getGameState(board: string[][]) {
   const pieceCount = numberOfPieces(board);
 
   // Get gameWeights
-  const earlyGameWeight = 32 / pieceCount;
-  const midGameWeight = 16 / pieceCount;
+  const earlyGameWeight = pieceCount / 32;
+  const midGameWeight = pieceCount;
   const endGameWeight = 8 / pieceCount;
 
   return [earlyGameWeight, midGameWeight, endGameWeight];
@@ -124,6 +124,8 @@ function getDoubledPawns(board: string[][], color: number) {
 
 function getPositionalScore(board: string[][]) {
   const [earlyGameWeight, midGameWeight, endGameWeight] = getGameState(board);
+
+  console.log(earlyGameWeight);
 
   let score = 0;
   for (let i = 0; i < board.length; i++) {
@@ -171,6 +173,22 @@ function getPositionalScore(board: string[][]) {
       // Pawns are generally played in the endgame for promotion
       if (board[i][j] === "p") score += 0.1 * (6 - i) * endGameWeight;
       if (board[i][j] === "P") score -= 0.1 * (i - 1) * endGameWeight;
+
+      // You generally want to get the other king to the edge or corners of the board
+
+      // TODO Fix later because it's 4am and I'm tired and I don't want to think about it right now lol :D
+      if (board[i][j] === "k") {
+        score -= 0.1 * (6 - i) * endGameWeight;
+        // score += 0.1 * (6 - j) * endGameWeight;
+
+        score -= 0.1 * Math.abs(3 - j) * endGameWeight;
+      }
+
+      if (board[i][j] === "K") {
+        score += 0.1 * (i - 1) * endGameWeight;
+        // score -= 0.1 * (j - 1) * endGameWeight;
+        score += 0.1 * Math.abs(3 - j) * endGameWeight;
+      }
     }
   }
 
