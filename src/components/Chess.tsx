@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { PieceType, PositionType } from "../data/interfaces";
 import { BOARD_SIZE, colors, STARTING_POSITION } from "../data/properties";
+import boardToFen from "../helpers/boardToFen";
 import getAvailableMoves from "../helpers/getAvailableMoves";
 import getMoveEvaluation from "../helpers/getMoveEvaluation";
 import { evaluateBoard, getBestMove } from "../helpers/minimax";
@@ -28,6 +29,8 @@ export default function Chess() {
 
   // ~~~ STATES ~~~ \\
   const [board, setBoard] = useLocalStorage("board", STARTING_POSITION);
+
+  const [fen, setFen] = useLocalStorage("fen", boardToFen(board));
 
   const [squareElements, setSquareElements] = useState<any>([]);
   const [selectedPiece, setSelectedPiece] = useState<PositionType>();
@@ -61,6 +64,8 @@ export default function Chess() {
 
   const [moveEvaluation, setMoveEvaluation] = useLocalStorage("moveEvaluation", "");
 
+  const [updater, setUpdater] = useState(0); // This is used to force a re-render
+
   // This will be temporary until I add board history so you can go back and see the evaluation of each move after the game is over
   const [moveEvalCounts, setMoveEvalCounts] = useLocalStorage("moveEvaluationCounts", {
     book: 0,
@@ -76,6 +81,8 @@ export default function Chess() {
   const [boardHistoryIndex, setBoardHistoryIndex] = useState(0);
 
   const [moveCount, setMoveCount] = useLocalStorage("moveCount", 0);
+
+  // const [pieceElements, setPieceElements] = useState<any>();
 
   // PIECE STATES
   const [grabbedPiece, setGrabbedPiece] = useState(-1);
@@ -225,11 +232,16 @@ export default function Chess() {
           setGrabbedPiece={setGrabbedPiece}
           moveToSquareFunction={clickSquareToMove}
           offsetX={boardElementRef.current?.offsetLeft || 0}
-          offsetY={0}
+          offsetY={boardElementRef.current?.offsetTop || 0}
         />
       ) : null;
     });
   });
+
+  // ~~~ UPDATER ~~~ \\
+  useEffect(() => {
+    setUpdater((prev) => prev + 1);
+  }, [boardElementRef.current?.offsetTop]);
 
   // ~~~ FUNCTIONS ~~~ \\
   function clickSquareToMove(y: number, x: number) {
@@ -301,13 +313,7 @@ export default function Chess() {
     setSelectedPiece(undefined);
     setMoveCount((moveCount: any) => moveCount + 1);
     setLastMove({ from: { x: x1, y: y1 }, to: { x: x2, y: y2 } });
-
-    // if (board[y2][x2] === "k") setWhiteKingHasMoved(true);
-    // if (board[y2][x2] === "K") setBlackKingHasMoved(true);
-    // if (board[y2][x2] === "r" && y2 === 7 && x2 === 7) setWhiteLeftRookHasMoved(true);
-    // if (board[y2][x2] === "r" && y2 === 7 && x2 === 0) setWhiteRightRookHasMoved(true);
-    // if (board[y2][x2] === "R" && y2 === 0 && x2 === 7) setBlackLeftRookHasMoved(true);
-    // if (board[y2][x2] === "R" && y2 === 0 && x2 === 0) setBlackRightRookHasMoved(true);
+    setFen(boardToFen(newBoard));
 
     if (board[y2][x2] === "k") setCastle((prev) => ({ ...prev, whiteKingHasMoved: true }));
     if (board[y2][x2] === "K") setCastle((prev) => ({ ...prev, blackKingHasMoved: true }));
@@ -369,26 +375,40 @@ export default function Chess() {
     setMoveEvaluation("");
 
     // For some reason, it was not resetting the board properly so I had to do this
-    // setBoard([
-    //   ["R", "N", "B", "Q", "K", "B", "N", "R"],
-    //   ["P", "P", "P", "P", "P", "P", "P", "P"],
-    //   ["", "", "", "", "", "", "", ""],
-    //   ["", "", "", "", "", "", "", ""],
-    //   ["", "", "", "", "", "", "", ""],
-    //   ["", "", "", "", "", "", "", ""],
-    //   ["p", "p", "p", "p", "p", "p", "p", "p"],
-    //   ["r", "n", "b", "q", "k", "b", "n", "r"],
-    // ]);
     setBoard([
-      ["", "", "", "", "", "", "", "R"],
-      ["", "K", "", "", "", "", "", ""],
+      ["R", "N", "B", "Q", "K", "B", "N", "R"],
+      ["P", "P", "P", "P", "P", "P", "P", "P"],
       ["", "", "", "", "", "", "", ""],
       ["", "", "", "", "", "", "", ""],
       ["", "", "", "", "", "", "", ""],
       ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["k", "", "", "", "", "", "", "r"],
+      ["p", "p", "p", "p", "p", "p", "p", "p"],
+      ["r", "n", "b", "q", "k", "b", "n", "r"],
     ]);
+
+    setFen(
+      boardToFen([
+        ["R", "N", "B", "Q", "K", "B", "N", "R"],
+        ["P", "P", "P", "P", "P", "P", "P", "P"],
+        ["", "", "", "", "", "", "", ""],
+        ["", "", "", "", "", "", "", ""],
+        ["", "", "", "", "", "", "", ""],
+        ["", "", "", "", "", "", "", ""],
+        ["p", "p", "p", "p", "p", "p", "p", "p"],
+        ["r", "n", "b", "q", "k", "b", "n", "r"],
+      ])
+    );
+
+    // setBoard([
+    //   ["", "", "", "", "", "", "", "R"],
+    //   ["", "K", "", "", "", "", "", ""],
+    //   ["", "", "", "", "", "", "", ""],
+    //   ["", "", "", "", "", "", "", ""],
+    //   ["", "", "", "", "", "", "", ""],
+    //   ["", "", "", "", "", "", "", ""],
+    //   ["", "", "", "", "", "", "", ""],
+    //   ["k", "", "", "", "", "", "", "r"],
+    // ]);
   };
 
   // ~~~ DRAG AND DROP ~~~ \\
@@ -415,6 +435,7 @@ export default function Chess() {
   // ~~~ RENDER ~~~ \\
   return (
     <>
+      <p style={{ textAlign: "center", margin: "10px", fontSize: "1.3rem" }}>{fen}</p>
       <div className="chess-wrapper">
         <EvalBar evaluation={score} height={boardElementRef.current?.offsetWidth!} />
         <div

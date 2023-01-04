@@ -125,7 +125,7 @@ function getDoubledPawns(board: string[][], color: number) {
 function getPositionalScore(board: string[][]) {
   const [earlyGameWeight, midGameWeight, endGameWeight] = getGameState(board);
 
-  console.log(earlyGameWeight);
+  // console.log(earlyGameWeight);
 
   let score = 0;
   for (let i = 0; i < board.length; i++) {
