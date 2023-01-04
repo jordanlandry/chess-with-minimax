@@ -1,13 +1,7 @@
 import { PositionType } from "../data/interfaces";
 import lookForCheck from "./lookForCheck";
 
-export default function getAvailableMoves(
-  board: string[][],
-  piece: string,
-  x: number,
-  y: number,
-  lookingForCheck: boolean = false
-) {
+export default function getAvailableMoves(board: string[][], piece: string, x: number, y: number) {
   const availableMoves: any = [];
   const currentColor = piece === piece.toUpperCase() ? "white" : "black";
 

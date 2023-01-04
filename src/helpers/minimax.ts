@@ -1,5 +1,6 @@
 import boardToFen from "./boardToFen";
 import getAvailableMoves from "./getAvailableMoves";
+import { inBounds } from "./lookForCheck";
 import numberOfPieces from "./numberOfPieces";
 import orderMoves from "./orderMoves";
 
@@ -77,29 +78,50 @@ export const pieceValues: { [key: string]: number } = {
   K: -100,
 };
 
-const gameWeights = {
-  endGame: 16,
-  midGame: 24,
-};
-
 function getGameState(board: string[][]) {
   const pieceCount = numberOfPieces(board);
 
   // Get gameWeights
+  const earlyGameWeight = 24 / pieceCount;
   const midGameWeight = 16 / pieceCount;
   const endGameWeight = 8 / pieceCount;
 
-  return [midGameWeight, endGameWeight];
+  return [earlyGameWeight, midGameWeight, endGameWeight];
 }
 
-function evaluateBoard(board: string[][]) {
-  const [midGameWeight, endGameWeight] = getGameState(board);
+function getDoubledPawns(board: string[][], color: number) {
+  let white = 0;
+  let black = 0;
+  const pawn = color === 0 ? "P" : "p";
 
-  const whiteMoves = getAllMoves(board, 0);
-  const blackMoves = getAllMoves(board, 1);
+  const distanceWeights: { [key: number]: number } = {
+    1: 0.5,
+    2: 0.4,
+    3: 0.3,
+    4: 0.2,
+    5: 0.1,
+  };
 
-  if (whiteMoves.length === 0) return -1000000000; // White is in checkmate
-  if (blackMoves.length === 0) return 1000000000; // Black is in checkmate
+  for (let i = 0; i < board.length; i++) {
+    for (let j = 0; j < board[i].length - 1; j++) {
+      for (let k = 1; k < 6; k++) {
+        if (!inBounds(i, j + k)) break;
+
+        if (color && board[i][j] === pawn && board[i][j + k] === pawn) black += distanceWeights[k]; // Black doubled pawns
+        if (!color && board[i][j] === pawn && board[i][j - k] === pawn) white += distanceWeights[k]; // White doubled pawns
+
+        // Check if a pawn is blocked by another piece
+        if (color && board[i][j] === pawn && board[i][j + k] !== "") black += 0.1; // Black blocked pawns
+        if (!color && board[i][j] === pawn && board[i][j - k] !== "") white -= 0.1; // White blocked pawns
+      }
+    }
+  }
+
+  return color ? black : white;
+}
+
+function getPositionalScore(board: string[][]) {
+  const [earlyGameWeight, midGameWeight, endGameWeight] = getGameState(board);
 
   let score = 0;
   for (let i = 0; i < board.length; i++) {
@@ -108,30 +130,65 @@ function evaluateBoard(board: string[][]) {
 
       score += pieceValues[board[i][j]];
 
-      // Add positional score for midgame
-      if (board[i][j] === "p") score += 0.1 * (6 - i) * midGameWeight;
-      if (board[i][j] === "P") score -= 0.1 * i * midGameWeight;
+      // Early game positional score
+      // Pawns knights and bishops are generally better to move in the early game towards the center
+      if (board[i][j] === "p") score += 0.1 * (6 - i) * earlyGameWeight;
+      if (board[i][j] === "P") score -= 0.1 * i * earlyGameWeight;
 
-      if (board[i][j] === "n") score += 0.11 * (6 - i) * midGameWeight;
-      if (board[i][j] === "N") score -= 0.11 * i * midGameWeight;
+      if (board[i][j] === "n") score += 0.11 * (6 - i) * earlyGameWeight;
+      if (board[i][j] === "N") score -= 0.11 * i * earlyGameWeight;
 
-      if (board[i][j] === "b") score += 0.11 * (6 - i) * midGameWeight;
-      if (board[i][j] === "B") score -= 0.11 * i * midGameWeight;
+      if (board[i][j] === "b") score += 0.11 * (6 - i) * earlyGameWeight;
+      if (board[i][j] === "B") score -= 0.11 * i * earlyGameWeight;
 
+      // Queens and rooks are generally not moved in the early game so discourage moving them
+      if (board[i][j] === "r") score -= 0.12 * (6 - i) * earlyGameWeight;
+      if (board[i][j] === "R") score += 0.12 * i * earlyGameWeight;
+
+      if (board[i][j] === "q") score -= 0.13 * (6 - i) * earlyGameWeight;
+      if (board[i][j] === "Q") score += 0.13 * i * earlyGameWeight;
+
+      // Midgame positional score
+      // Queens rooks and bishops and knights are generally played in the midgame
       if (board[i][j] === "r") score += 0.12 * (6 - i) * midGameWeight;
       if (board[i][j] === "R") score -= 0.12 * i * midGameWeight;
 
       if (board[i][j] === "q") score += 0.13 * (6 - i) * midGameWeight;
       if (board[i][j] === "Q") score -= 0.13 * i * midGameWeight;
 
-      // Positional score for endgame, you want the enemy king to be closer to the corners and edges
-      if (board[i][j] === "k") score += 0.1 * (6 - i) * endGameWeight;
-      if (board[i][j] === "K") score -= 0.1 * i * endGameWeight;
+      if (board[i][j] === "b") score += 0.11 * (6 - i) * midGameWeight;
+      if (board[i][j] === "B") score -= 0.11 * i * midGameWeight;
 
-      if (board[i][j] === "k") score += 0.1 * (6 - j) * endGameWeight;
-      if (board[i][j] === "K") score -= 0.1 * j * endGameWeight;
+      if (board[i][j] === "n") score += 0.11 * (6 - i) * midGameWeight;
+      if (board[i][j] === "N") score -= 0.11 * i * midGameWeight;
+
+      // End game positional score
+      // Pawns are generally played in the endgame for promotion
+      if (board[i][j] === "p") score += 0.1 * (6 - i) * endGameWeight;
+      if (board[i][j] === "P") score -= 0.1 * i * endGameWeight;
     }
   }
+
+  return score;
+}
+
+function evaluateBoard(board: string[][]) {
+  const [earlyGameWeight, midGameWeight, endGameWeight] = getGameState(board);
+
+  const whiteMoves = getAllMoves(board, 0);
+  const blackMoves = getAllMoves(board, 1);
+
+  if (whiteMoves.length === 0) return -1000000000; // White is in checkmate
+  if (blackMoves.length === 0) return 1000000000; // Black is in checkmate
+
+  let score = 0;
+
+  // Check for doubled pawns, this is a bad thing so we subtract the score
+  score -= getDoubledPawns(board, 0); // White
+  score += getDoubledPawns(board, 1); // Black
+
+  // Check for positional score, value certain pieces by their position on the board
+  score += getPositionalScore(board);
 
   return score;
 }

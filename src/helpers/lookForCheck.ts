@@ -164,10 +164,10 @@ export default function lookForCheck(board: string[][], currentColor: string, x:
   }
 
   return false;
+}
 
-  function inBounds(x: number, y: number) {
-    if (y < 0 || y > 7 || x < 0 || x > 7) return false;
+export function inBounds(x: number, y: number) {
+  if (y < 0 || y > 7 || x < 0 || x > 7) return false;
 
-    return true;
-  }
+  return true;
 }

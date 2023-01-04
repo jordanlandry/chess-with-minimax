@@ -34,17 +34,19 @@ export default function Chess() {
   const [availableMoves, setAvailableMoves] = useState<MoveType[]>([]);
   const [whosTurn, setWhosTurn] = useLocalStorage("whosTurn", 0); // 0 = white, 1 = black
 
-  // CASTLING STATES
-  const [whiteKingHasMoved, setWhiteKingHasMoved] = useState(false);
-  const [blackKingHasMoved, setBlackKingHasMoved] = useState(false);
-  const [whiteLeftRookHasMoved, setWhiteLeftRookHasMoved] = useState(false);
-  const [whiteRightRookHasMoved, setWhiteRightRookHasMoved] = useState(false);
-  const [blackLeftRookHasMoved, setBlackLeftRookHasMoved] = useState(false);
-  const [blackRightRookHasMoved, setBlackRightRookHasMoved] = useState(false);
+  // CASTLE STATES
+  const [castle, setCastle] = useState({
+    whiteKingHasMoved: false,
+    whiteLeftRookHasMoved: false,
+    whiteRightRookHasMoved: false,
+    blackKingHasMoved: false,
+    blackLeftRookHasMoved: false,
+    blackRightRookHasMoved: false,
+  });
 
   // PROMOTION STATES
   const [isPromoting, setIsPromoting] = useState(false);
-  const [promotionPiece, setPromotionPiece] = useState("");
+  // const [promotionPiece, setPromotionPiece] = useState("");
 
   // MINIMAX STATES
   const [timeToThink, setTimeToThink] = useLocalStorage("aiTimeToThink", 2.5); // In Seconds
@@ -98,20 +100,14 @@ export default function Chess() {
             key={key}
             color={color}
             onClick={clickSquareToMove}
-            x={i}
-            y={j}
+            pos={{ x: i, y: j }}
             isOvertakeSquare={isOvertakeSquare}
             isAvailableSquare={isAvailableSquare}
-            movedFromX={lastMove?.from.x}
-            movedFromY={lastMove?.from.y}
-            movedToX={lastMove?.to.x}
-            movedToY={lastMove?.to.y}
+            move={{ from: { x: lastMove?.from.x, y: lastMove?.from.y }, to: { x: lastMove?.to.y, y: lastMove?.to.x } }}
             width={boardElementRef.current?.clientWidth! / BOARD_SIZE}
             holdingPiece={grabbedPiece !== -1}
-            selectedX={selectedPiece?.x}
-            selectedY={selectedPiece?.y}
-            offsetX={boardElementRef.current?.offsetLeft || 0}
-            offsetY={boardElementRef.current?.offsetTop || 0}
+            selectedPos={{ x: selectedPiece?.x!, y: selectedPiece?.y! }}
+            offset={{ x: boardElementRef.current?.offsetLeft!, y: boardElementRef.current?.offsetTop! }}
           />
         );
         key++;
@@ -131,22 +127,22 @@ export default function Chess() {
     for (let i = 0; i < moves.length; i++) {
       if (!moves[i].isCastle) continue;
 
-      if (moves[i].x === 2 && moves[i].y === 0 && (blackKingHasMoved || blackLeftRookHasMoved)) {
+      if (moves[i].x === 2 && moves[i].y === 0 && (castle.blackKingHasMoved || castle.blackLeftRookHasMoved)) {
         moves.splice(i, 1);
         i--;
       }
 
-      if (moves[i].x === 6 && moves[i].y === 0 && (blackKingHasMoved || blackRightRookHasMoved)) {
+      if (moves[i].x === 6 && moves[i].y === 0 && (castle.blackKingHasMoved || castle.blackRightRookHasMoved)) {
         moves.splice(i, 1);
         i--;
       }
 
-      if (moves[i].x === 2 && moves[i].y === 7 && (whiteKingHasMoved || whiteRightRookHasMoved)) {
+      if (moves[i].x === 2 && moves[i].y === 7 && (castle.whiteKingHasMoved || castle.whiteRightRookHasMoved)) {
         moves.splice(i, 1);
         i--;
       }
 
-      if (moves[i].x === 6 && moves[i].y === 7 && (whiteKingHasMoved || whiteLeftRookHasMoved)) {
+      if (moves[i].x === 6 && moves[i].y === 7 && (castle.whiteKingHasMoved || castle.whiteLeftRookHasMoved)) {
         moves.splice(i, 1);
         i--;
       }
@@ -224,7 +220,6 @@ export default function Chess() {
   });
 
   // ~~~ FUNCTIONS ~~~ \\
-
   function clickSquareToMove(y: number, x: number) {
     if (!selectedPiece) return;
 
@@ -258,8 +253,9 @@ export default function Chess() {
 
   async function moveFrom(x1: number, y1: number, x2: number, y2: number, changeTurn = true) {
     // AI Castle
-    if (board[y1][x1] === "K" && !blackKingHasMoved) {
-      setBlackKingHasMoved(true);
+    if (board[y1][x1] === "K" && !castle.blackKingHasMoved) {
+      // setBlackKingHasMoved(true);
+      setCastle((prev) => ({ ...prev, blackKingHasMoved: true }));
 
       if (x2 === 6) {
         const newBoard = [...board];
@@ -267,7 +263,7 @@ export default function Chess() {
         newBoard[0][7] = "";
         setBoard(newBoard);
 
-        setBlackRightRookHasMoved(true);
+        setCastle((prev) => ({ ...prev, blackRightRookHasMoved: true }));
       }
 
       if (x2 === 2) {
@@ -276,7 +272,7 @@ export default function Chess() {
         newBoard[0][0] = "";
         setBoard(newBoard);
 
-        setBlackLeftRookHasMoved(true);
+        setCastle((prev) => ({ ...prev, blackLeftRookHasMoved: true }));
       }
     }
 
@@ -294,12 +290,19 @@ export default function Chess() {
     setMoveCount((moveCount) => moveCount + 1);
     setLastMove({ from: { x: x1, y: y1 }, to: { x: x2, y: y2 } });
 
-    if (board[y2][x2] === "k") setWhiteKingHasMoved(true);
-    if (board[y2][x2] === "K") setBlackKingHasMoved(true);
-    if (board[y2][x2] === "r" && y2 === 7 && x2 === 7) setWhiteLeftRookHasMoved(true);
-    if (board[y2][x2] === "r" && y2 === 7 && x2 === 0) setWhiteRightRookHasMoved(true);
-    if (board[y2][x2] === "R" && y2 === 0 && x2 === 7) setBlackLeftRookHasMoved(true);
-    if (board[y2][x2] === "R" && y2 === 0 && x2 === 0) setBlackRightRookHasMoved(true);
+    // if (board[y2][x2] === "k") setWhiteKingHasMoved(true);
+    // if (board[y2][x2] === "K") setBlackKingHasMoved(true);
+    // if (board[y2][x2] === "r" && y2 === 7 && x2 === 7) setWhiteLeftRookHasMoved(true);
+    // if (board[y2][x2] === "r" && y2 === 7 && x2 === 0) setWhiteRightRookHasMoved(true);
+    // if (board[y2][x2] === "R" && y2 === 0 && x2 === 7) setBlackLeftRookHasMoved(true);
+    // if (board[y2][x2] === "R" && y2 === 0 && x2 === 0) setBlackRightRookHasMoved(true);
+
+    if (board[y2][x2] === "k") setCastle((prev) => ({ ...prev, whiteKingHasMoved: true }));
+    if (board[y2][x2] === "K") setCastle((prev) => ({ ...prev, blackKingHasMoved: true }));
+    if (board[y2][x2] === "r" && y2 === 7 && x2 === 7) setCastle((prev) => ({ ...prev, whiteLeftRookHasMoved: true }));
+    if (board[y2][x2] === "r" && y2 === 7 && x2 === 0) setCastle((prev) => ({ ...prev, whiteRookHasMoved: true }));
+    if (board[y2][x2] === "R" && y2 === 0 && x2 === 7) setCastle((prev) => ({ ...prev, blackLeftRookHasMoved: true }));
+    if (board[y2][x2] === "R" && y2 === 0 && x2 === 0) setCastle((prev) => ({ ...prev, blackRightRookHasMoved: true }));
 
     setWhosTurn((prev: number) => (prev === 0 ? 1 : 0));
   }
@@ -324,7 +327,7 @@ export default function Chess() {
     else newBoard[lastMove.to.y][lastMove.to.x] = to;
 
     setBoard(newBoard);
-    setPromotionPiece(to);
+    // setPromotionPiece(to);
     setIsPromoting(false);
   };
 
@@ -332,13 +335,17 @@ export default function Chess() {
     setWhosTurn(0);
     setMoveCount(0);
     setLastMove({ from: { x: -1, y: -1 }, to: { x: -1, y: -1 } });
-    setWhiteKingHasMoved(false);
-    setBlackKingHasMoved(false);
-    setWhiteLeftRookHasMoved(false);
-    setWhiteRightRookHasMoved(false);
-    setBlackLeftRookHasMoved(false);
-    setBlackRightRookHasMoved(false);
-    setPromotionPiece("");
+
+    setCastle({
+      blackKingHasMoved: false,
+      blackLeftRookHasMoved: false,
+      blackRightRookHasMoved: false,
+      whiteKingHasMoved: false,
+      whiteLeftRookHasMoved: false,
+      whiteRightRookHasMoved: false,
+    });
+
+    // setPromotionPiece("");
     setIsPromoting(false);
     setAvailableMoves([]);
     setSelectedPiece(undefined);
@@ -360,6 +367,16 @@ export default function Chess() {
       ["p", "p", "p", "p", "p", "p", "p", "p"],
       ["r", "n", "b", "q", "k", "b", "n", "r"],
     ]);
+    // setBoard([
+    //   ["R", "", "", "", "K", "", "", "R"],
+    //   ["", "", "", "", "", "", "", ""],
+    //   ["", "", "", "", "", "r", "r", ""],
+    //   ["", "", "", "", "", "", "", ""],
+    //   ["", "", "", "", "", "", "", ""],
+    //   ["", "", "", "", "", "", "", ""],
+    //   ["", "", "", "", "", "", "", ""],
+    //   ["", "", "", "r", "r", "", "k", ""],
+    // ]);
   };
 
   // ~~~ DRAG AND DROP ~~~ \\

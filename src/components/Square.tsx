@@ -4,46 +4,31 @@ import { colors } from "../data/properties";
 type Props = {
   color: string;
   onClick: (x: number, y: number) => void;
-  x: number;
-  y: number;
+  pos: { x: number; y: number };
+  // x: number;
+  // y: number;
   isOvertakeSquare: boolean;
   isAvailableSquare: boolean;
 
-  movedFromX?: number;
-  movedFromY?: number;
-  movedToX?: number;
-  movedToY?: number;
+  move: { from: { x: number; y: number }; to: { x: number; y: number } };
 
+  offset: { x: number; y: number };
+  selectedPos: { x: number; y: number };
   width: number;
   holdingPiece: boolean;
-
-  selectedX: number | undefined;
-  selectedY: number | undefined;
-
-  offsetX: number;
-  offsetY: number;
 };
 
 export default function Square({
+  pos,
+  selectedPos,
   color,
   onClick,
-  x,
-  y,
   isOvertakeSquare,
   isAvailableSquare,
-  movedFromX,
-  movedFromY,
-  movedToX,
-  movedToY,
   width,
-
-  selectedX,
-  selectedY,
-
   holdingPiece,
-
-  offsetX,
-  offsetY,
+  offset,
+  move,
 }: Props) {
   const [hoverX, setHoverX] = useState(-1);
   const [hoverY, setHoverY] = useState(-1);
@@ -56,8 +41,8 @@ export default function Square({
     }
 
     const handleMouseMove = (e: MouseEvent) => {
-      const newX = Math.floor((e.clientX - offsetX) / width);
-      const newY = Math.floor((e.clientY - offsetY) / width);
+      const newX = Math.floor((e.clientX - offset.x) / width);
+      const newY = Math.floor((e.clientY - offset.y) / width);
 
       setHoverX(newX);
       setHoverY(newY);
@@ -68,12 +53,14 @@ export default function Square({
   }, [holdingPiece]);
 
   const showYellow =
-    (selectedY === x && selectedX === y) || (movedFromX == y && movedFromY == x) || (movedToX === y && movedToY === x);
+    (selectedPos!.y === pos.x && selectedPos!.x === pos.y) ||
+    (move?.from.x === pos.y && move?.from.y === pos.x) ||
+    (move?.to.y === pos.y && move?.to.x === pos.x);
 
   return (
     <div
-      className={`${x}-${y}`}
-      onClick={() => onClick(x, y)}
+      className={`${pos.x}-${pos.y}`}
+      onClick={() => onClick(pos.x, pos.y)}
       style={{
         width: width,
         height: width,
@@ -81,7 +68,8 @@ export default function Square({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        boxShadow: hoverX === y && hoverY === x ? `inset 0 0 0 ${width / 16}px rgba(255, 255, 255, 0.5)` : "none",
+        boxShadow:
+          hoverX === pos.y && hoverY === pos.x ? `inset 0 0 0 ${width / 16}px rgba(255, 255, 255, 0.5)` : "none",
       }}
     >
       {isOvertakeSquare ? (
@@ -113,8 +101,8 @@ export default function Square({
             backgroundColor: colors.movedTo,
             height: width,
             width: width,
-            left: `${y * width + offsetX}px`,
-            top: `${x * width + offsetY}px`,
+            left: `${pos.y * width + offset.x}px`,
+            top: `${pos.x * width + offset.y}px`,
           }}
         />
       ) : null}
