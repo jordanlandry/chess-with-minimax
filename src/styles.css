@@ -13,6 +13,15 @@ p {
   margin: 0;
 }
 
+* {
+  user-drag: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
 .piece {
   -webkit-user-select: none; /* Safari */
   -moz-user-select: none; /* Firefox */
