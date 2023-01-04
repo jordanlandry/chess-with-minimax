@@ -106,6 +106,7 @@ export default function lookForCheck(board: string[][], currentColor: string, x:
     if (inBounds(x, y)) {
       if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
       if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
+      if (tempBoard[y][x] !== "") break;
     }
   }
 
@@ -117,6 +118,7 @@ export default function lookForCheck(board: string[][], currentColor: string, x:
     if (inBounds(x, y)) {
       if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
       if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
+      if (tempBoard[y][x] !== "") break;
     }
   }
 
@@ -128,6 +130,7 @@ export default function lookForCheck(board: string[][], currentColor: string, x:
     if (inBounds(x, y)) {
       if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
       if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
+      if (tempBoard[y][x] !== "") break;
     }
   }
 
@@ -139,6 +142,7 @@ export default function lookForCheck(board: string[][], currentColor: string, x:
     if (inBounds(x, y)) {
       if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
       if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
+      if (tempBoard[y][x] !== "") break;
     }
   }
 
