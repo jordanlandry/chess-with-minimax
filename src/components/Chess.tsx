@@ -3,7 +3,7 @@ import { PieceType, PositionType } from "../data/interfaces";
 import { BOARD_SIZE, colors, STARTING_POSITION } from "../data/properties";
 import getAvailableMoves from "../helpers/getAvailableMoves";
 import getMoveEvaluation from "../helpers/getMoveEvaluation";
-import { getBestMove } from "../helpers/minimax";
+import { evaluateBoard, getBestMove } from "../helpers/minimax";
 import nextId from "../helpers/nextId";
 import openings from "../helpers/openings";
 import useHeight from "../hooks/useHeight";
@@ -398,6 +398,8 @@ export default function Chess() {
     };
   }, []);
 
+  const [boardValue, setBoardValue] = useState(0);
+
   // ~~~ RENDER ~~~ \\
   return (
     <>
@@ -468,6 +470,8 @@ export default function Chess() {
             />
             <label htmlFor="move-ordering-input">Move Ordering</label>
           </div>
+          <button onClick={() => setBoardValue(evaluateBoard(board))}>Evaluate Position</button>
+          <p>Board Value: {Math.round(boardValue * 1000) / 1000}</p>
         </div>
       ) : null}
     </>

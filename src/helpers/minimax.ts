@@ -82,7 +82,7 @@ function getGameState(board: string[][]) {
   const pieceCount = numberOfPieces(board);
 
   // Get gameWeights
-  const earlyGameWeight = 24 / pieceCount;
+  const earlyGameWeight = 32 / pieceCount;
   const midGameWeight = 16 / pieceCount;
   const endGameWeight = 8 / pieceCount;
 
@@ -105,15 +105,17 @@ function getDoubledPawns(board: string[][], color: number) {
   for (let i = 0; i < board.length; i++) {
     for (let j = 0; j < board[i].length - 1; j++) {
       for (let k = 1; k < 6; k++) {
-        if (!inBounds(i, j + k)) break;
+        if (!color && !inBounds(i + k, j)) continue;
+        if (color && !inBounds(i - k, j)) continue;
 
-        if (color && board[i][j] === pawn && board[i][j + k] === pawn) black += distanceWeights[k]; // Black doubled pawns
-        if (!color && board[i][j] === pawn && board[i][j - k] === pawn) white += distanceWeights[k]; // White doubled pawns
+        if (!color && board[i][j] === pawn && board[i + k][j] === pawn) black += distanceWeights[k]; // Black doubled pawns
+        if (color && board[i][j] === pawn && board[i - k][j] === pawn) white -= distanceWeights[k]; // White doubled pawns
 
         // Check if a pawn is blocked by another piece
-        if (color && board[i][j] === pawn && board[i][j + k] !== "") black += 0.1; // Black blocked pawns
-        if (!color && board[i][j] === pawn && board[i][j - k] !== "") white -= 0.1; // White blocked pawns
       }
+
+      if (!color && board[i][j] === pawn && board[i + 1][j] !== "") black += 0.1; // Black blocked pawns
+      if (color && board[i][j] === pawn && board[i - 1][j] !== "") white -= 0.1; // White blocked pawns
     }
   }
 
@@ -133,46 +135,49 @@ function getPositionalScore(board: string[][]) {
       // Early game positional score
       // Pawns knights and bishops are generally better to move in the early game towards the center
       if (board[i][j] === "p") score += 0.1 * (6 - i) * earlyGameWeight;
-      if (board[i][j] === "P") score -= 0.1 * i * earlyGameWeight;
+      if (board[i][j] === "P") score -= 0.1 * (i - 1) * earlyGameWeight;
+
+      if (board[i][j] === "p") score += 0.1 * (6 - i) * earlyGameWeight;
+      if (board[i][j] === "P") score -= 0.1 * (i - 1) * earlyGameWeight;
 
       if (board[i][j] === "n") score += 0.11 * (6 - i) * earlyGameWeight;
-      if (board[i][j] === "N") score -= 0.11 * i * earlyGameWeight;
+      if (board[i][j] === "N") score -= 0.11 * (i - 1) * earlyGameWeight;
 
       if (board[i][j] === "b") score += 0.11 * (6 - i) * earlyGameWeight;
-      if (board[i][j] === "B") score -= 0.11 * i * earlyGameWeight;
+      if (board[i][j] === "B") score -= 0.11 * (i - 1) * earlyGameWeight;
 
       // Queens and rooks are generally not moved in the early game so discourage moving them
       if (board[i][j] === "r") score -= 0.12 * (6 - i) * earlyGameWeight;
-      if (board[i][j] === "R") score += 0.12 * i * earlyGameWeight;
+      if (board[i][j] === "R") score += 0.12 * (i - 1) * earlyGameWeight;
 
       if (board[i][j] === "q") score -= 0.13 * (6 - i) * earlyGameWeight;
-      if (board[i][j] === "Q") score += 0.13 * i * earlyGameWeight;
+      if (board[i][j] === "Q") score += 0.13 * (i - 1) * earlyGameWeight;
 
       // Midgame positional score
       // Queens rooks and bishops and knights are generally played in the midgame
       if (board[i][j] === "r") score += 0.12 * (6 - i) * midGameWeight;
-      if (board[i][j] === "R") score -= 0.12 * i * midGameWeight;
+      if (board[i][j] === "R") score -= 0.12 * (i - 1) * midGameWeight;
 
       if (board[i][j] === "q") score += 0.13 * (6 - i) * midGameWeight;
-      if (board[i][j] === "Q") score -= 0.13 * i * midGameWeight;
+      if (board[i][j] === "Q") score -= 0.13 * (i - 1) * midGameWeight;
 
       if (board[i][j] === "b") score += 0.11 * (6 - i) * midGameWeight;
-      if (board[i][j] === "B") score -= 0.11 * i * midGameWeight;
+      if (board[i][j] === "B") score -= 0.11 * (i - 1) * midGameWeight;
 
       if (board[i][j] === "n") score += 0.11 * (6 - i) * midGameWeight;
-      if (board[i][j] === "N") score -= 0.11 * i * midGameWeight;
+      if (board[i][j] === "N") score -= 0.11 * (i - 1) * midGameWeight;
 
       // End game positional score
       // Pawns are generally played in the endgame for promotion
       if (board[i][j] === "p") score += 0.1 * (6 - i) * endGameWeight;
-      if (board[i][j] === "P") score -= 0.1 * i * endGameWeight;
+      if (board[i][j] === "P") score -= 0.1 * (i - 1) * endGameWeight;
     }
   }
 
   return score;
 }
 
-function evaluateBoard(board: string[][]) {
+export function evaluateBoard(board: string[][]) {
   const [earlyGameWeight, midGameWeight, endGameWeight] = getGameState(board);
 
   const whiteMoves = getAllMoves(board, 0);
