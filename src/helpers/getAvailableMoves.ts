@@ -219,14 +219,18 @@ export default function getAvailableMoves(board: string[][], piece: string, x: n
     // ~~ Castling ~~ \\
 
     // White side
-    if (board[y][7] === "r" && board[y][6] === "" && board[y][5] === "" && y === 7) tryMove(6, 7, true);
-    if (board[y][0] === "r" && board[y][1] === "" && board[y][2] === "" && board[y][3] === "" && y === 7)
-      tryMove(2, 7, true);
+    if (!lookForCheck(board, "white")) {
+      if (board[y][7] === "r" && board[y][6] === "" && board[y][5] === "" && y === 7) tryMove(6, 7, true);
+      if (board[y][0] === "r" && board[y][1] === "" && board[y][2] === "" && board[y][3] === "" && y === 7)
+        tryMove(2, 7, true);
+    }
 
     // Black side
-    if (board[y][7] === "R" && board[y][6] === "" && board[y][5] === "" && y === 0) tryMove(6, 0, true);
-    if (board[y][0] === "R" && board[y][1] === "" && board[y][2] === "" && board[y][3] === "" && y === 0)
-      tryMove(2, 0, true);
+    if (!lookForCheck(board, "black")) {
+      if (board[y][7] === "R" && board[y][6] === "" && board[y][5] === "" && y === 0) tryMove(6, 0, true);
+      if (board[y][0] === "R" && board[y][1] === "" && board[y][2] === "" && board[y][3] === "" && y === 0)
+        tryMove(2, 0, true);
+    }
   }
 
   // Check if the move will result in a check for the player who's turn it is if not, push the move to the array

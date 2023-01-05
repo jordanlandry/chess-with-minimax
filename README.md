@@ -11,7 +11,7 @@ A chess game implemented in React and TypeScript, featuring:
 
 TODO Fix these
 
-- AI Castling, it doesn't know if the king has moved or not
+- AI Castling, it doesn't know if the king / rook has moved or not
 - Add all the rules of castling
 - - Can't castle while in check [ ]
 - - Can't caslte while a piece attacks one of the open spots needed for castle [ ]
