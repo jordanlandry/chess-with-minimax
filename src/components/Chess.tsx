@@ -21,6 +21,8 @@ export default function Chess() {
     isCastle: boolean;
   }
 
+  const animationTime = 75;
+
   // ~~~ HOOKS ~~~ \\
   const width = useWidth();
   const height = useHeight();
@@ -36,6 +38,8 @@ export default function Chess() {
   const [selectedPiece, setSelectedPiece] = useState<PositionType>();
   const [availableMoves, setAvailableMoves] = useState<MoveType[]>([]);
   const [whosTurn, setWhosTurn] = useLocalStorage("whosTurn", 0); // 0 = white, 1 = black
+
+  const [animateSettings, setAnimateSettings] = useState({ x: 0, y: 0, piece: { x: -1, y: -1 } });
 
   // CASTLE STATES
   const [castle, setCastle] = useState({
@@ -233,6 +237,7 @@ export default function Chess() {
           moveToSquareFunction={clickSquareToMove}
           offsetX={boardElementRef.current?.offsetLeft || 0}
           offsetY={boardElementRef.current?.offsetTop || 0}
+          animateSettings={animateSettings}
         />
       ) : null;
     });
@@ -275,54 +280,86 @@ export default function Chess() {
     setSelectedPiece(undefined);
   }
 
+  const animatePiece = (x1: number, y1: number, x2: number, y2: number) => {
+    // Animate the piece
+    setAnimateSettings((prev: any) => ({ ...prev, piece: { x: x1, y: y1 } }));
+    let fps = 10;
+
+    let i = 0;
+    const interval = setInterval(() => {
+      setAnimateSettings((prev: any) => {
+        const newX = (i / fps) * (x2 - x1);
+        const newY = (i / fps) * (y2 - y1);
+
+        i++;
+
+        return { ...prev, x: newX, y: newY };
+      });
+    }, animationTime / fps);
+
+    setTimeout(() => {
+      clearInterval(interval);
+    }, animationTime);
+  };
+
   async function moveFrom(x1: number, y1: number, x2: number, y2: number, changeTurn = true) {
-    // AI Castle
-    if (board[y1][x1] === "K" && !castle.blackKingHasMoved) {
-      // setBlackKingHasMoved(true);
-      setCastle((prev) => ({ ...prev, blackKingHasMoved: true }));
+    if (grabbedPiece === -1) animatePiece(x1, y1, x2, y2); // Animate the piece if it's not being dragged
 
-      if (x2 === 6) {
+    setTimeout(
+      () => {
+        // AI Castle
+        if (board[y1][x1] === "K" && !castle.blackKingHasMoved) {
+          // setBlackKingHasMoved(true);
+          setCastle((prev) => ({ ...prev, blackKingHasMoved: true }));
+
+          if (x2 === 6) {
+            const newBoard = [...board];
+            newBoard[0][5] = "R";
+            newBoard[0][7] = "";
+            setBoard(newBoard);
+
+            setCastle((prev) => ({ ...prev, blackRightRookHasMoved: true }));
+          }
+
+          if (x2 === 2) {
+            const newBoard = [...board];
+            newBoard[0][3] = "R";
+            newBoard[0][0] = "";
+            setBoard(newBoard);
+
+            setCastle((prev) => ({ ...prev, blackLeftRookHasMoved: true }));
+          }
+        }
+
+        // Play audio
+        const audio =
+          board[y2][x2] === "" ? new Audio("./assets/sounds/move-self.mp3") : new Audio("./assets/sounds/capture.mp3");
+        audio.play();
+
         const newBoard = [...board];
-        newBoard[0][5] = "R";
-        newBoard[0][7] = "";
+        newBoard[y2][x2] = board[y1][x1];
+        newBoard[y1][x1] = "";
+
         setBoard(newBoard);
+        setSelectedPiece(undefined);
+        setMoveCount((moveCount: any) => moveCount + 1);
+        setLastMove({ from: { x: x1, y: y1 }, to: { x: x2, y: y2 } });
+        setFen(boardToFen(newBoard));
 
-        setCastle((prev) => ({ ...prev, blackRightRookHasMoved: true }));
-      }
+        if (board[y2][x2] === "k") setCastle((prev) => ({ ...prev, whiteKingHasMoved: true }));
+        if (board[y2][x2] === "K") setCastle((prev) => ({ ...prev, blackKingHasMoved: true }));
+        if (board[y2][x2] === "r" && y2 === 7 && x2 === 7)
+          setCastle((prev) => ({ ...prev, whiteLeftRookHasMoved: true }));
+        if (board[y2][x2] === "r" && y2 === 7 && x2 === 0) setCastle((prev) => ({ ...prev, whiteRookHasMoved: true }));
+        if (board[y2][x2] === "R" && y2 === 0 && x2 === 7)
+          setCastle((prev) => ({ ...prev, blackLeftRookHasMoved: true }));
+        if (board[y2][x2] === "R" && y2 === 0 && x2 === 0)
+          setCastle((prev) => ({ ...prev, blackRightRookHasMoved: true }));
 
-      if (x2 === 2) {
-        const newBoard = [...board];
-        newBoard[0][3] = "R";
-        newBoard[0][0] = "";
-        setBoard(newBoard);
-
-        setCastle((prev) => ({ ...prev, blackLeftRookHasMoved: true }));
-      }
-    }
-
-    // Play audio
-    const audio =
-      board[y2][x2] === "" ? new Audio("./assets/sounds/move-self.mp3") : new Audio("./assets/sounds/capture.mp3");
-    audio.play();
-
-    const newBoard = [...board];
-    newBoard[y2][x2] = board[y1][x1];
-    newBoard[y1][x1] = "";
-
-    setBoard(newBoard);
-    setSelectedPiece(undefined);
-    setMoveCount((moveCount: any) => moveCount + 1);
-    setLastMove({ from: { x: x1, y: y1 }, to: { x: x2, y: y2 } });
-    setFen(boardToFen(newBoard));
-
-    if (board[y2][x2] === "k") setCastle((prev) => ({ ...prev, whiteKingHasMoved: true }));
-    if (board[y2][x2] === "K") setCastle((prev) => ({ ...prev, blackKingHasMoved: true }));
-    if (board[y2][x2] === "r" && y2 === 7 && x2 === 7) setCastle((prev) => ({ ...prev, whiteLeftRookHasMoved: true }));
-    if (board[y2][x2] === "r" && y2 === 7 && x2 === 0) setCastle((prev) => ({ ...prev, whiteRookHasMoved: true }));
-    if (board[y2][x2] === "R" && y2 === 0 && x2 === 7) setCastle((prev) => ({ ...prev, blackLeftRookHasMoved: true }));
-    if (board[y2][x2] === "R" && y2 === 0 && x2 === 0) setCastle((prev) => ({ ...prev, blackRightRookHasMoved: true }));
-
-    setWhosTurn((prev: number) => (prev === 0 ? 1 : 0));
+        setWhosTurn((prev: number) => (prev === 0 ? 1 : 0));
+      },
+      grabbedPiece === -1 ? animationTime : 0
+    );
   }
 
   function handlePieceClick(piece: PieceType) {
@@ -345,7 +382,6 @@ export default function Chess() {
     else newBoard[lastMove.to.y][lastMove.to.x] = to;
 
     setBoard(newBoard);
-    // setPromotionPiece(to);
     setIsPromoting(false);
   };
 
@@ -373,6 +409,8 @@ export default function Chess() {
     setCheckCount(0);
     setSquareElements([]);
     setMoveEvaluation("");
+
+    setAnimateSettings({ piece: { x: -1, y: -1 }, x: -1, y: -1 });
 
     // For some reason, it was not resetting the board properly so I had to do this
     setBoard([
@@ -408,17 +446,6 @@ export default function Chess() {
         ["r", "n", "b", "q", "k", "b", "n", "r"],
       ])
     );
-
-    // setBoard([
-    //   ["", "", "", "", "", "", "", "R"],
-    //   ["", "K", "", "", "", "", "", ""],
-    //   ["", "", "", "", "", "", "", ""],
-    //   ["", "", "", "", "", "", "", ""],
-    //   ["", "", "", "", "", "", "", ""],
-    //   ["", "", "", "", "", "", "", ""],
-    //   ["", "", "", "", "", "", "", ""],
-    //   ["k", "", "", "", "", "", "", "r"],
-    // ]);
   };
 
   // ~~~ DRAG AND DROP ~~~ \\

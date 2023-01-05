@@ -15,15 +15,27 @@ export default function Piece({
   moveToSquareFunction,
   offsetX,
   offsetY,
+  animateSettings,
 }: any) {
+  let animationOffsetX = 0;
+  let animationOffsetY = 0;
+  if (animateSettings.piece.x === x && animateSettings.piece.y === y) {
+    if (animateSettings.x !== -1 && animateSettings.y !== -1) {
+      animationOffsetX = (animateSettings.x * width) / 16;
+      animationOffsetY = (animateSettings.y * width) / 16;
+    }
+  }
+
   const style = useContext(PieceStyleContext);
   const img = "./assets/images/styles/" + style + "/" + type + team + ".png";
-
-  const animationTime = 1000; // ms
 
   const [xPos, setXPos] = useState((x * width) / 8 + offsetX);
   const [yPos, setYPos] = useState((y * width) / 8 + offsetY);
   const [mouseDown, setMouseDown] = useState(grabbedPiece === id);
+
+  // if (xPos + animationOffsetX > width + offsetX) animationOffsetX = 0;
+  // if (yPos + animationOffsetY > width + offsetY) animationOffsetY = 0;
+  // if (xPos + animationOffsetX) animationOffsetX = 0;
 
   const handleMouseDown = () => {
     if (grabbedPiece !== -1) return;
@@ -54,6 +66,15 @@ export default function Piece({
     setYPos(clamp(newY, -width / 16 + offsetY, width - width / 16 + offsetY));
   };
 
+  // useEffect(() => {
+  //   const handleMousedown = (e: MouseEvent) => {
+  //     console.log(grabbedPiece);
+  //   };
+
+  //   window.addEventListener("mousedown", handleMousedown);
+  //   return () => window.removeEventListener("mousedown", handleMousedown);
+  // }, []);
+
   return (
     <img
       draggable="false"
@@ -70,8 +91,8 @@ export default function Piece({
         position: "absolute",
         width: width / 8,
         height: width / 8,
-        left: xPos,
-        top: yPos,
+        left: xPos + animationOffsetX,
+        top: yPos + animationOffsetY,
         zIndex: mouseDown ? 100 : 1,
       }}
     />

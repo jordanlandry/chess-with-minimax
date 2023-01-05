@@ -199,11 +199,11 @@ export function evaluateBoard(board: string[][]) {
   const whiteMoves = getAllMoves(board, 0);
   const blackMoves = getAllMoves(board, 1);
 
-  // Check for stalemate
+  // // Check for stalemate
   if (whiteMoves.length === 0 && !lookForCheck(board, "white")) return 0;
   if (blackMoves.length === 0 && !lookForCheck(board, "black")) return 0;
 
-  // Check for checkmate
+  // // Check for checkmate
   if (whiteMoves.length === 0) return -checkMateScore; // White is in checkmate
   if (blackMoves.length === 0) return checkMateScore; // Black is in checkmate
 
