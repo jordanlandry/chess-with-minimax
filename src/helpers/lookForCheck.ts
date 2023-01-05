@@ -1,4 +1,4 @@
-export default function lookForCheck(board: string[][], currentColor: string, x: number, y: number, piece: string) {
+export default function lookForCheck(board: string[][], currentColor: string, x?: number, y?: number, piece?: string) {
   let kingX = 0;
   let kingY = 0;
 
@@ -14,11 +14,13 @@ export default function lookForCheck(board: string[][], currentColor: string, x:
 
   // Make the move
   const tempBoard = board.map((row) => [...row]);
-  tempBoard[y][x] = piece;
+  if (x !== undefined && y !== undefined && piece !== undefined) {
+    tempBoard[y][x] = piece;
 
-  if (piece === "k" || piece === "K") {
-    kingX = x;
-    kingY = y;
+    if (piece === "k" || piece === "K") {
+      kingX = x;
+      kingY = y;
+    }
   }
 
   // See if the king can be captured
@@ -145,49 +147,6 @@ export default function lookForCheck(board: string[][], currentColor: string, x:
       if (tempBoard[y][x] !== "") break;
     }
   }
-
-  // Straight
-  // for (let i = 1; i < 8; i++) {
-  //   // Up
-  //   let x = kingX;
-  //   let y = kingY - i;
-
-  //   if (inBounds(x, y) && up) {
-  //     if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
-  //     if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
-  //     if (tempBoard[y][x] !== "") up = true;
-  //   }
-
-  //   // Down
-  //   x = kingX;
-  //   y = kingY + i;
-  //   if (inBounds(x, y) && down) {
-  //     if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
-  //     if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
-  //     if (tempBoard[y][x] !== "") down = true;
-  //   }
-
-  //   // Right
-  //   x = kingX + i;
-  //   y = kingY;
-  //   if (inBounds(x, y) && right) {
-  //     if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
-  //     if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
-  //     if (tempBoard[y][x] !== "") right = true;
-  //   }
-
-  //   // Left
-  //   x = kingX - i;
-  //   y = kingY;
-
-  //   if (inBounds(x, y) && left) {
-  //     if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
-  //     if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
-  //     if (tempBoard[y][x] !== "") left = true;
-  //   }
-  // }
-
-  // For some reason rook and queen are not working when the king is in check from it and moves on the same axis as the piece
 
   // ~~~ KING ~~~ \\
   const kingMoves = [

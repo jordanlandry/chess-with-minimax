@@ -1,6 +1,6 @@
 import boardToFen from "./boardToFen";
 import getAvailableMoves from "./getAvailableMoves";
-import { inBounds } from "./lookForCheck";
+import lookForCheck, { inBounds } from "./lookForCheck";
 import numberOfPieces from "./numberOfPieces";
 import orderMoves from "./orderMoves";
 
@@ -199,6 +199,11 @@ export function evaluateBoard(board: string[][]) {
   const whiteMoves = getAllMoves(board, 0);
   const blackMoves = getAllMoves(board, 1);
 
+  // Check for stalemate
+  if (whiteMoves.length === 0 && !lookForCheck(board, "white")) return 0;
+  if (blackMoves.length === 0 && !lookForCheck(board, "black")) return 0;
+
+  // Check for checkmate
   if (whiteMoves.length === 0) return -checkMateScore; // White is in checkmate
   if (blackMoves.length === 0) return checkMateScore; // Black is in checkmate
 
@@ -263,6 +268,13 @@ export function minimax(
   if (isMaximizing) {
     const allMoves = orderMoves(board, getAllMoves(board, 0), true, currentBestMove, doMoveOrdering);
 
+    // Check for stalemate
+    if (allMoves.length === 0 && !lookForCheck(board, "white")) {
+      bestMove.score = 0;
+      return bestMove;
+    }
+
+    // Check for checkmate
     if (allMoves.length === 0) {
       bestMove.score = -checkMateScore;
       return bestMove;
@@ -341,6 +353,18 @@ export function minimax(
   // Black is minimizing
   else {
     const allMoves = orderMoves(board, getAllMoves(board, 1), false, currentBestMove, doMoveOrdering);
+
+    // Check for stalemate
+    if (allMoves.length === 0 && !lookForCheck(board, "black")) {
+      bestMove.score = 0;
+      return bestMove;
+    }
+
+    // Check for checkmate
+    if (allMoves.length === 0) {
+      bestMove.score = checkMateScore;
+      return bestMove;
+    }
 
     let bestScore = Infinity;
 
