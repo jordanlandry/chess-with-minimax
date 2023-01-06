@@ -14,7 +14,7 @@ interface MoveDatabase {
 
 let checkCount = 0;
 let transpositionTable: MoveDatabase = {};
-const MAX_TRANSPOSITION_TABLE_SIZE = 128000;
+const MAX_TRANSPOSITION_TABLE_SIZE = 64000;
 
 let startTime = 0;
 let elapsedTime = 0;
@@ -196,26 +196,27 @@ function getPositionalScore(board: string[][]) {
 }
 
 export function evaluateBoard(board: string[][]) {
-  const whiteMoves = getAllMoves(board, 0);
-  const blackMoves = getAllMoves(board, 1);
+  const whiteMoves = getAllMoves(board, 0, true);
+  const blackMoves = getAllMoves(board, 1, true);
 
-  // // Check for stalemate
+  // // // Check for stalemate
   if (whiteMoves.length === 0 && !lookForCheck(board, "white")) return 0;
   if (blackMoves.length === 0 && !lookForCheck(board, "black")) return 0;
 
-  // // Check for checkmate
+  // // // Check for checkmate
   if (whiteMoves.length === 0) return -checkMateScore; // White is in checkmate
   if (blackMoves.length === 0) return checkMateScore; // Black is in checkmate
 
   let score = 0;
 
-  // Check for doubled pawns, this is a bad thing so we subtract the score
+  // // Check for doubled pawns, this is a bad thing so we subtract the score
   score -= getDoubledPawns(board, 0); // White
   score += getDoubledPawns(board, 1); // Black
 
-  // Check for positional score, value certain pieces by their position on the board
+  // // Check for positional score, value certain pieces by their position on the board
   score += getPositionalScore(board);
 
+  // let score = 0;
   return score;
 }
 
@@ -309,7 +310,13 @@ export function minimax(
       }
 
       const prevEncounter = transpositionTable[boardToFen(board)];
-      if (prevEncounter) return prevEncounter;
+      if (prevEncounter && prevEncounter.piece) {
+        if (prevEncounter.score > bestScore) {
+          bestScore = prevEncounter.score;
+          bestMove = { ...move, score: bestScore };
+        }
+        return prevEncounter;
+      }
 
       const nextEval: any = minimax(
         board,
@@ -396,7 +403,13 @@ export function minimax(
       }
 
       const prevEncounter = transpositionTable[boardToFen(board)];
-      if (prevEncounter) return prevEncounter;
+      if (prevEncounter && prevEncounter.piece) {
+        if (prevEncounter.score < bestScore) {
+          bestScore = prevEncounter.score;
+          bestMove = { ...move, score: bestScore };
+        }
+        return prevEncounter;
+      }
 
       const nextEval: any = minimax(
         board,
@@ -442,11 +455,18 @@ export function minimax(
   }
 }
 
-export function getAllMoves(board: string[][], player: number) {
+// Search in a specific order to improve the chances of finding any move incase we are looking for check,
+// As if we find a move, then we can stop searching, and without it is causing the depth to lower
+
+const moveSearchOrderI = [2, 1, 3, 0, 4, 5, 6, 7];
+const moveSearchOrderJ = [2, 1, 3, 0, 4, 5, 6, 7];
+export function getAllMoves(board: string[][], player: number, lookingForMate = false) {
   const allAvailebleMoves: Move[] = [];
 
-  for (let i = 0; i < board.length; i++) {
-    for (let j = 0; j < board[i].length; j++) {
+  // for (let i = 0; i < board.length; i++) {
+  //   for (let j = 0; j < board[i].length; j++) {
+  for (const i of moveSearchOrderI) {
+    for (const j of moveSearchOrderJ) {
       // Check if the square is empty
       if (board[i][j] === "") continue;
 
@@ -455,6 +475,7 @@ export function getAllMoves(board: string[][], player: number) {
       if (player === 1 && board[i][j] === board[i][j].toLowerCase()) continue;
 
       const availableMoves = getAvailableMoves(board, board[i][j], j, i);
+      if (lookingForMate && availableMoves.length > 0) return availableMoves;
 
       if (availableMoves.length === 0) continue;
 

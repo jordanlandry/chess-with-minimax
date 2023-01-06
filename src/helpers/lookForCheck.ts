@@ -8,6 +8,7 @@ export default function lookForCheck(board: string[][], currentColor: string, x?
       if (board[i][j] === (currentColor === "white" ? "K" : "k")) {
         kingX = j;
         kingY = i;
+        break;
       }
     }
   }
