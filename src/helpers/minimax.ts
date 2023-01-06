@@ -14,6 +14,7 @@ interface MoveDatabase {
 
 let checkCount = 0;
 let transpositionTable: MoveDatabase = {};
+const MAX_TRANSPOSITION_TABLE_SIZE = 128000;
 
 let startTime = 0;
 let elapsedTime = 0;
@@ -61,6 +62,7 @@ export function getBestMove(board: string[][], timeLimit: number, doAlphaBeta: b
   return { ...bestMove, depth: depth - 1 };
 }
 
+const checkMateScore = 1000000;
 export const pieceValues: { [key: string]: number } = {
   p: 1,
   n: 3,
@@ -77,8 +79,6 @@ export const pieceValues: { [key: string]: number } = {
   Q: -9,
   K: -100,
 };
-
-const checkMateScore = 1000000;
 
 function getGameState(board: string[][]) {
   const pieceCount = numberOfPieces(board);
@@ -336,7 +336,8 @@ export function minimax(
       }
 
       // Update transposition table
-      // transpositionTable[boardToFen(board)] = nextEval;
+      transpositionTable[boardToFen(board)] = nextEval;
+      if (Object.keys(transpositionTable).length > MAX_TRANSPOSITION_TABLE_SIZE) transpositionTable = {};
 
       // Update alpha
       if (doAlphaBeta) {
@@ -426,7 +427,8 @@ export function minimax(
       }
 
       // Update transposition table
-      // transpositionTable[boardToFen(board)] = nextEval;
+      transpositionTable[boardToFen(board)] = nextEval;
+      if (Object.keys(transpositionTable).length > MAX_TRANSPOSITION_TABLE_SIZE) transpositionTable = {};
 
       // Update alpha
       if (doAlphaBeta) {

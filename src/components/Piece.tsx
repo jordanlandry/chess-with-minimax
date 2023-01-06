@@ -33,10 +33,6 @@ export default function Piece({
   const [yPos, setYPos] = useState((y * width) / 8 + offsetY);
   const [mouseDown, setMouseDown] = useState(grabbedPiece === id);
 
-  // if (xPos + animationOffsetX > width + offsetX) animationOffsetX = 0;
-  // if (yPos + animationOffsetY > width + offsetY) animationOffsetY = 0;
-  // if (xPos + animationOffsetX) animationOffsetX = 0;
-
   const handleMouseDown = () => {
     if (grabbedPiece !== -1) return;
 
@@ -48,6 +44,7 @@ export default function Piece({
   const handleMouseUp = (e: MouseEvent) => {
     setMouseDown(false);
     setGrabbedPiece(-1);
+
     // // Move the piece to the position of the mouse
     const newX = Math.floor((e.clientX - offsetX) / (width / 8));
     const newY = Math.floor((e.clientY - offsetY) / (width / 8));
@@ -65,15 +62,6 @@ export default function Piece({
     setXPos(clamp(newX, -width / 16 + offsetX, width - width / 16 + offsetX));
     setYPos(clamp(newY, -width / 16 + offsetY, width - width / 16 + offsetY));
   };
-
-  // useEffect(() => {
-  //   const handleMousedown = (e: MouseEvent) => {
-  //     console.log(grabbedPiece);
-  //   };
-
-  //   window.addEventListener("mousedown", handleMousedown);
-  //   return () => window.removeEventListener("mousedown", handleMousedown);
-  // }, []);
 
   return (
     <img
