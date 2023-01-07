@@ -249,6 +249,8 @@ interface MinimaxMove extends Move {
   checkCount?: number;
 }
 
+let transpositionSize = 0;
+
 // Minimax
 export function minimax(
   board: string[][],
@@ -368,8 +370,10 @@ export function minimax(
       }
 
       // Update transposition table
-      // transpositionTable[boardToFen(board, "white")] = nextEval;
-      if (Object.keys(transpositionTable).length > MAX_TRANSPOSITION_TABLE_SIZE) transpositionTable = {};
+      transpositionTable[boardToFen(board, "white")] = nextEval;
+      transpositionSize++;
+      if (transpositionSize > MAX_TRANSPOSITION_TABLE_SIZE) transpositionTable = {};
+      // if (Object.keys(transpositionTable).length > MAX_TRANSPOSITION_TABLE_SIZE) transpositionTable = {};
 
       // Update alpha
       if (doAlphaBeta) {
@@ -472,8 +476,9 @@ export function minimax(
       }
 
       // Update transposition table
-      // transpositionTable[boardToFen(board, "black")] = nextEval;
-      if (Object.keys(transpositionTable).length > MAX_TRANSPOSITION_TABLE_SIZE) transpositionTable = {};
+      transpositionTable[boardToFen(board, "black")] = nextEval;
+      transpositionSize++;
+      if (transpositionSize > MAX_TRANSPOSITION_TABLE_SIZE) transpositionTable = {};
 
       // Update alpha
       if (doAlphaBeta) {
