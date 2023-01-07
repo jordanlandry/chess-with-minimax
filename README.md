@@ -11,11 +11,10 @@ A chess game implemented in React and TypeScript, featuring:
 
 TODO Fix these
 
-- AI Castling, it doesn't know if the king / rook has moved or not
 - Add all the rules of castling
 - - Can't castle while in check [ ]
 - - Can't caslte while a piece attacks one of the open spots needed for castle [ ]
-- - Can't caslte if the king has moved or rook [x] for player, [ ] for AI
+- - Can't caslte if the king has moved or rook [x] for player, [x] for AI
 - - Can't castle if there are pieces in the way [x]
 
 - I need to add En Passent
