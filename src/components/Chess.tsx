@@ -255,7 +255,7 @@ export default function Chess() {
   // ~~~ UPDATER ~~~ \\
   useEffect(() => {
     setUpdater((prev) => prev + 1);
-  }, [boardElementRef.current?.offsetTop]);
+  }, [boardElementRef.current?.offsetTop, height, width]);
 
   // ~~~ FUNCTIONS ~~~ \\
   function clickSquareToMove(y: number, x: number) {

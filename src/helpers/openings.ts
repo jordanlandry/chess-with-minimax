@@ -1,7 +1,8 @@
 import boardToFen from "./boardToFen";
 
 export default function openings(board: string[][]) {
-  const fen = boardToFen(board);
+  // Remove the last 2 characters from the FEN string (the current color)
+  const fen = boardToFen(board, "white").slice(0, -2);
 
   // @ts-ignore
   if (OPENINGS[fen]) return OPENINGS[fen].responses[Math.floor(Math.random() * OPENINGS[fen].responses.length)];
