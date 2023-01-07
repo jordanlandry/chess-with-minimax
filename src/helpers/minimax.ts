@@ -10,15 +10,20 @@ interface MoveDatabase {
   [key: string]: MinimaxMove;
 }
 
-// const transpositionTable: MoveDatabase = {};
-
 let checkCount = 0;
 let transpositionTable: MoveDatabase = {};
 const MAX_TRANSPOSITION_TABLE_SIZE = 64000;
 
 let startTime = 0;
 let elapsedTime = 0;
-export function getBestMove(board: string[][], timeLimit: number, doAlphaBeta: boolean, doMoveOrdering: boolean) {
+export function getBestMove(
+  board: string[][],
+  timeLimit: number,
+  maxDepth: number,
+  doAlphaBeta: boolean,
+  doMoveOrdering: boolean,
+  castlingProperties: any
+) {
   let bestMove: MinimaxMove = {
     from: { x: -1, y: -1 },
     to: { x: -1, y: -1 },
@@ -29,10 +34,14 @@ export function getBestMove(board: string[][], timeLimit: number, doAlphaBeta: b
   checkCount = 0;
   let depth = 1;
 
+  if (maxDepth !== -1) {
+    timeLimit = Infinity;
+  }
+
   startTime = Date.now();
   while (Date.now() - startTime < timeLimit) {
-    // Reset the transposition table every iteration
-    transpositionTable = {};
+    if (depth > maxDepth && maxDepth !== -1) break;
+    // transpositionTable = {};
 
     const initialBoard = board.map((row) => [...row]);
     const newBoard = initialBoard.map((row) => [...row]);
@@ -46,7 +55,8 @@ export function getBestMove(board: string[][], timeLimit: number, doAlphaBeta: b
       timeLimit,
       bestMove,
       doAlphaBeta,
-      doMoveOrdering
+      doMoveOrdering,
+      castlingProperties
     );
     const endTime = Date.now();
 
@@ -59,7 +69,7 @@ export function getBestMove(board: string[][], timeLimit: number, doAlphaBeta: b
     depth++;
   }
 
-  return { ...bestMove, depth: depth - 1 };
+  return { ...bestMove, depth: depth - 1, timeToThink: Date.now() - startTime };
 }
 
 const checkMateScore = 1000000;
@@ -104,8 +114,11 @@ function getDoubledPawns(board: string[][], color: number) {
     5: 0.1,
   };
 
-  for (let i = 0; i < board.length; i++) {
-    for (let j = 0; j < board[i].length - 1; j++) {
+  const moveSearchOrderI = [2, 1, 3, 0, 4, 5, 6, 7];
+  const moveSearchOrderJ = [2, 1, 3, 0, 4, 5, 6, 7];
+
+  for (const i of moveSearchOrderI) {
+    for (const j of moveSearchOrderJ) {
       for (let k = 1; k < 6; k++) {
         if (!color && !inBounds(i + k, j)) continue;
         if (color && !inBounds(i - k, j)) continue;
@@ -127,9 +140,13 @@ function getDoubledPawns(board: string[][], color: number) {
 function getPositionalScore(board: string[][]) {
   const [earlyGameWeight, midGameWeight, endGameWeight] = getGameState(board);
 
+  // const [earlyGameWeight, midGameWeight, endGameWeight] = [1, 1, 1];
+  const moveSearchOrderI = [2, 1, 3, 0, 4, 5, 6, 7];
+  const moveSearchOrderJ = [2, 1, 3, 0, 4, 5, 6, 7];
+
   let score = 0;
-  for (let i = 0; i < board.length; i++) {
-    for (let j = 0; j < board[i].length; j++) {
+  for (const i of moveSearchOrderI) {
+    for (const j of moveSearchOrderJ) {
       if (board[i][j] === "") continue;
 
       score += pieceValues[board[i][j]];
@@ -242,7 +259,8 @@ export function minimax(
   timeLimit: number,
   currentBestMove: any,
   doAlphaBeta: boolean,
-  doMoveOrdering: boolean
+  doMoveOrdering: boolean,
+  castlingProperties: any
 ) {
   elapsedTime = Date.now() - startTime;
 
@@ -265,9 +283,11 @@ export function minimax(
   // Time limit reached
   if (elapsedTime >= timeLimit) return null;
 
+  const castle = { ...castlingProperties };
+
   // White is maximizing
   if (isMaximizing) {
-    const allMoves = orderMoves(board, getAllMoves(board, 0), true, currentBestMove, doMoveOrdering);
+    const allMoves = orderMoves(board, getAllMoves(board, 0, castle), true, currentBestMove, doMoveOrdering);
 
     // Check for stalemate
     if (allMoves.length === 0 && !lookForCheck(board, "white")) {
@@ -300,16 +320,20 @@ export function minimax(
 
       // Check for castle -- Just need to move the rook to the correct position
       if (move.piece === "k" && move.from.x === 4 && move.to.x === 6) {
+        castle.whiteKingHasMoved = true;
+        castle.whiteRightRookHasMoved = true;
         board[7][5] = "r";
         board[7][7] = "";
       }
 
       if (move.piece === "k" && move.from.x === 4 && move.to.x === 2) {
+        castle.whiteKingHasMoved = true;
+        castle.whiteLeftRookHasMoved = true;
         board[7][3] = "r";
         board[7][0] = "";
       }
 
-      const prevEncounter = transpositionTable[boardToFen(board)];
+      const prevEncounter = transpositionTable[boardToFen(board, "white")];
       if (prevEncounter && prevEncounter.piece) {
         if (prevEncounter.score > bestScore) {
           bestScore = prevEncounter.score;
@@ -327,7 +351,8 @@ export function minimax(
         timeLimit,
         currentBestMove,
         doAlphaBeta,
-        doMoveOrdering
+        doMoveOrdering,
+        castle
       );
 
       // Check if time limit reached
@@ -343,7 +368,7 @@ export function minimax(
       }
 
       // Update transposition table
-      transpositionTable[boardToFen(board)] = nextEval;
+      // transpositionTable[boardToFen(board, "white")] = nextEval;
       if (Object.keys(transpositionTable).length > MAX_TRANSPOSITION_TABLE_SIZE) transpositionTable = {};
 
       // Update alpha
@@ -360,7 +385,7 @@ export function minimax(
 
   // Black is minimizing
   else {
-    const allMoves = orderMoves(board, getAllMoves(board, 1), false, currentBestMove, doMoveOrdering);
+    const allMoves = orderMoves(board, getAllMoves(board, 1, castle), false, currentBestMove, doMoveOrdering);
 
     // Check for stalemate
     if (allMoves.length === 0 && !lookForCheck(board, "black")) {
@@ -393,16 +418,22 @@ export function minimax(
 
       // Check for castle -- Just need to move the rook to the correct position
       if (move.piece === "K" && move.from.x === 4 && move.to.x === 6) {
+        castle.blackKingHasMoved = true;
+        castle.blackRightRookHasMoved = true;
+
         board[0][5] = "R";
         board[0][7] = "";
       }
 
       if (move.piece === "K" && move.from.x === 4 && move.to.x === 2) {
+        castle.blackKingHasMoved = true;
+        castle.blackLeftRookHasMoved = true;
+
         board[0][3] = "R";
         board[0][0] = "";
       }
 
-      const prevEncounter = transpositionTable[boardToFen(board)];
+      const prevEncounter = transpositionTable[boardToFen(board, "black")];
       if (prevEncounter && prevEncounter.piece) {
         if (prevEncounter.score < bestScore) {
           bestScore = prevEncounter.score;
@@ -420,7 +451,8 @@ export function minimax(
         timeLimit,
         currentBestMove,
         doAlphaBeta,
-        doMoveOrdering
+        doMoveOrdering,
+        castle
       );
 
       // Check if time limit reached
@@ -440,7 +472,7 @@ export function minimax(
       }
 
       // Update transposition table
-      transpositionTable[boardToFen(board)] = nextEval;
+      // transpositionTable[boardToFen(board, "black")] = nextEval;
       if (Object.keys(transpositionTable).length > MAX_TRANSPOSITION_TABLE_SIZE) transpositionTable = {};
 
       // Update alpha
@@ -460,7 +492,7 @@ export function minimax(
 
 const moveSearchOrderI = [2, 1, 3, 0, 4, 5, 6, 7];
 const moveSearchOrderJ = [2, 1, 3, 0, 4, 5, 6, 7];
-export function getAllMoves(board: string[][], player: number, lookingForMate = false) {
+export function getAllMoves(board: string[][], player: number, castleProperties: any, lookingForMate = false) {
   const allAvailebleMoves: Move[] = [];
 
   // for (let i = 0; i < board.length; i++) {
@@ -474,7 +506,7 @@ export function getAllMoves(board: string[][], player: number, lookingForMate = 
       if (player === 0 && board[i][j] === board[i][j].toUpperCase()) continue;
       if (player === 1 && board[i][j] === board[i][j].toLowerCase()) continue;
 
-      const availableMoves = getAvailableMoves(board, board[i][j], j, i);
+      const availableMoves = getAvailableMoves(board, board[i][j], j, i, castleProperties);
       if (lookingForMate && availableMoves.length > 0) return availableMoves;
 
       if (availableMoves.length === 0) continue;

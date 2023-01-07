@@ -1,4 +1,4 @@
-export default function boardToFen(board: string[][]) {
+export default function boardToFen(board: string[][], currentColor: string) {
   let fen = "";
 
   for (let i = 0; i < board.length; i++) {
@@ -24,6 +24,8 @@ export default function boardToFen(board: string[][]) {
 
     if (i < board.length - 1) fen += "/";
   }
+
+  fen += currentColor === "white" ? "-w" : "-b";
 
   return fen;
 }

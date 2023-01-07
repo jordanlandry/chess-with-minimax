@@ -32,7 +32,7 @@ export default function Chess() {
   // ~~~ STATES ~~~ \\
   const [board, setBoard] = useLocalStorage("board", STARTING_POSITION);
 
-  const [fen, setFen] = useLocalStorage("fen", boardToFen(board));
+  const [fen, setFen] = useLocalStorage("fen", boardToFen(board, "white"));
 
   const [squareElements, setSquareElements] = useState<any>([]);
   const [selectedPiece, setSelectedPiece] = useState<PositionType>();
@@ -60,7 +60,8 @@ export default function Chess() {
   const [score, setScore] = useLocalStorage("minMaxScore", 0);
   const [checkCount, setCheckCount] = useState(0);
   const [lastMove, setLastMove] = useLocalStorage("lastMove", undefined);
-  const [depth, setDepth] = useState(0);
+  const [useDepth, setUseDepth] = useLocalStorage("useDepth", false);
+  const [depth, setDepth] = useState(useDepth ? 5 : 0);
 
   const [doAlphaBeta, setDoAlphaBeta] = useLocalStorage("doAlphaBeta", true);
   const [doMoveOrdering, setDoMoveOrdering] = useLocalStorage("doMoveOrdering", true);
@@ -143,7 +144,7 @@ export default function Chess() {
   // ~~~ AVAILABLE MOVES ~~~ \\
   useEffect(() => {
     let moves = selectedPiece
-      ? getAvailableMoves(board, board[selectedPiece!.y][selectedPiece!.x], selectedPiece?.x, selectedPiece?.y)
+      ? getAvailableMoves(board, board[selectedPiece!.y][selectedPiece!.x], selectedPiece?.x, selectedPiece?.y, castle)
       : [];
 
     // Check if you can castle
@@ -193,7 +194,14 @@ export default function Chess() {
     }
 
     const prevScore = score;
-    const move = getBestMove([...board], timeToThink * 1000, doAlphaBeta, doMoveOrdering);
+    const move = getBestMove(
+      [...board],
+      timeToThink * 1000,
+      useDepth ? depth : -1,
+      doAlphaBeta,
+      doMoveOrdering,
+      castle
+    );
     const newScore = move.score;
 
     // After each move, check if it's a good move or a blunder etc.
@@ -207,6 +215,7 @@ export default function Chess() {
     if (move.from.x === -1) return;
     moveFrom(move.from.x, move.from.y, move.to.x, move.to.y);
 
+    setTimeToThink(move.timeToThink ? Math.round(move.timeToThink * 1000) / 1000000 : 0);
     setDepth(move.depth ? move.depth : 0);
     setScore(move.score ? move.score : 0);
     setCheckCount(move.checkCount ? move.checkCount : 0);
@@ -344,7 +353,7 @@ export default function Chess() {
         setSelectedPiece(undefined);
         setMoveCount((moveCount: any) => moveCount + 1);
         setLastMove({ from: { x: x1, y: y1 }, to: { x: x2, y: y2 } });
-        setFen(boardToFen(newBoard));
+        setFen(boardToFen(newBoard, whosTurn === 0 ? "white" : "black"));
 
         if (board[y2][x2] === "k") setCastle((prev) => ({ ...prev, whiteKingHasMoved: true }));
         if (board[y2][x2] === "K") setCastle((prev) => ({ ...prev, blackKingHasMoved: true }));
@@ -405,7 +414,8 @@ export default function Chess() {
     setSelectedPiece(undefined);
     setScore(0);
     setGrabbedPiece(-1);
-    setDepth(0);
+    // setDepth(useDepth ? 5 : 0);
+    // setTimeToThink(useDepth ? 0 : 2.5);
     setCheckCount(0);
     setSquareElements([]);
     setMoveEvaluation("");
@@ -435,16 +445,19 @@ export default function Chess() {
     // ]);
 
     setFen(
-      boardToFen([
-        ["R", "N", "B", "Q", "K", "B", "N", "R"],
-        ["P", "P", "P", "P", "P", "P", "P", "P"],
-        ["", "", "", "", "", "", "", ""],
-        ["", "", "", "", "", "", "", ""],
-        ["", "", "", "", "", "", "", ""],
-        ["", "", "", "", "", "", "", ""],
-        ["p", "p", "p", "p", "p", "p", "p", "p"],
-        ["r", "n", "b", "q", "k", "b", "n", "r"],
-      ])
+      boardToFen(
+        [
+          ["R", "N", "B", "Q", "K", "B", "N", "R"],
+          ["P", "P", "P", "P", "P", "P", "P", "P"],
+          ["", "", "", "", "", "", "", ""],
+          ["", "", "", "", "", "", "", ""],
+          ["", "", "", "", "", "", "", ""],
+          ["", "", "", "", "", "", "", ""],
+          ["p", "p", "p", "p", "p", "p", "p", "p"],
+          ["r", "n", "b", "q", "k", "b", "n", "r"],
+        ],
+        "w"
+      )
     );
   };
 
@@ -538,14 +551,49 @@ export default function Chess() {
       {showMinimaxDetails ? (
         <div style={{ display: "flex", flexDirection: "column", width: "250px", margin: "auto", marginTop: "10px" }}>
           <p>Checks: {checkCount.toLocaleString()}</p>
-          <p>Depth: {depth}</p>
+          {/* <p>Depth: {depth}</p> */}
           <p>Minimax Settings</p>
-          <p>{`Time to think:  ${timeToThink}s`}</p>
 
-          <div style={{ display: "flex" }}>
-            <button onClick={() => setTimeToThink((prev: any) => (prev > 0.5 ? prev - 0.5 : 0.5))}>-</button>
-            <button onClick={() => setTimeToThink((prev: any) => prev + 0.5)}>+</button>
-          </div>
+          {useDepth ? (
+            <>
+              <p>Depth: {depth}</p>
+              <p>Time to think: {timeToThink}s</p>
+              <div style={{ display: "flex" }}>
+                <button onClick={() => setDepth((prev) => prev - 1)}>-</button>
+                <button onClick={() => setDepth((prev) => prev + 1)}>+</button>
+                <button onClick={() => setDepth(5)}>Reset</button>
+                <button
+                  onClick={() => {
+                    setUseDepth(false);
+                    setDepth(0);
+                    setTimeToThink(2.5);
+                  }}
+                >
+                  Use Time
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p>Depth: {depth}</p>
+              <p>{`Time to think:  ${timeToThink}s`}</p>
+
+              <div style={{ display: "flex" }}>
+                <button onClick={() => setTimeToThink((prev: any) => (prev > 0.5 ? prev - 0.5 : 0.5))}>-</button>
+                <button onClick={() => setTimeToThink((prev: any) => prev + 0.5)}>+</button>
+                <button onClick={() => setTimeToThink(2.5)}>Reset</button>
+                <button
+                  onClick={() => {
+                    setUseDepth(true);
+                    setTimeToThink(0);
+                    setDepth(5);
+                  }}
+                >
+                  Use Depth
+                </button>
+              </div>
+            </>
+          )}
 
           <div>
             <input

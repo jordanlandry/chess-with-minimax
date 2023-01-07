@@ -1,7 +1,13 @@
 import { PositionType } from "../data/interfaces";
 import lookForCheck from "./lookForCheck";
 
-export default function getAvailableMoves(board: string[][], piece: string, x: number, y: number) {
+export default function getAvailableMoves(
+  board: string[][],
+  piece: string,
+  x: number,
+  y: number,
+  castlingProperties: any
+) {
   const availableMoves: any = [];
   const currentColor = piece === piece.toUpperCase() ? "white" : "black";
 
@@ -219,16 +225,44 @@ export default function getAvailableMoves(board: string[][], piece: string, x: n
     // ~~ Castling ~~ \\
 
     // White side
-    if (!lookForCheck(board, "white")) {
-      if (board[y][7] === "r" && board[y][6] === "" && board[y][5] === "" && y === 7) tryMove(6, 7, true);
-      if (board[y][0] === "r" && board[y][1] === "" && board[y][2] === "" && board[y][3] === "" && y === 7)
+    if (!lookForCheck(board, "white") && !castlingProperties.whiteKingHasMoved) {
+      if (
+        !castlingProperties.whiteRightRookHasMoved &&
+        board[y][7] === "r" &&
+        board[y][6] === "" &&
+        board[y][5] === "" &&
+        y === 7
+      )
+        tryMove(6, 7, true);
+      if (
+        !castlingProperties.whiteLeftRookHasMoved &&
+        board[y][0] === "r" &&
+        board[y][1] === "" &&
+        board[y][2] === "" &&
+        board[y][3] === "" &&
+        y === 7
+      )
         tryMove(2, 7, true);
     }
 
     // Black side
-    if (!lookForCheck(board, "black")) {
-      if (board[y][7] === "R" && board[y][6] === "" && board[y][5] === "" && y === 0) tryMove(6, 0, true);
-      if (board[y][0] === "R" && board[y][1] === "" && board[y][2] === "" && board[y][3] === "" && y === 0)
+    if (!lookForCheck(board, "black") && !castlingProperties.blackKingHasMoved) {
+      if (
+        !castlingProperties.blackRightRookHasMoved &&
+        board[y][7] === "R" &&
+        board[y][6] === "" &&
+        board[y][5] === "" &&
+        y === 0
+      )
+        tryMove(6, 0, true);
+      if (
+        !castlingProperties.blackLeftRookHasMoved &&
+        board[y][0] === "R" &&
+        board[y][1] === "" &&
+        board[y][2] === "" &&
+        board[y][3] === "" &&
+        y === 0
+      )
         tryMove(2, 0, true);
     }
   }
