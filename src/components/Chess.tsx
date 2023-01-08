@@ -406,8 +406,6 @@ export default function Chess() {
     setSelectedPiece(undefined);
     setScore(0);
     setGrabbedPiece(-1);
-    // setDepth(useDepth ? 5 : 0);
-    // setTimeToThink(useDepth ? 0 : 2.5);
     setCheckCount(0);
     setSquareElements([]);
     setMoveEvaluation("");

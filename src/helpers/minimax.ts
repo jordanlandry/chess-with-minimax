@@ -34,15 +34,9 @@ export function getBestMove(
   checkCount = 0;
   let depth = 1;
 
-  if (maxDepth !== -1) {
-    timeLimit = Infinity;
-  }
-
   startTime = Date.now();
-  while (Date.now() - startTime < timeLimit) {
-    if (depth > maxDepth && maxDepth !== -1) break;
-    // transpositionTable = {};
 
+  while (Date.now() - startTime < timeLimit) {
     const initialBoard = board.map((row) => [...row]);
     const newBoard = initialBoard.map((row) => [...row]);
 
