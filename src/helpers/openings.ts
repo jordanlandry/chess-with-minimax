@@ -20,6 +20,7 @@ interface Opening {
 }
 
 const OPENINGS: Opening = {
+  // e4
   "RNBQKBNR/PPPPPPPP/8/8/4p3/8/pppp1ppp/rnbqkbnr": {
     responses: [
       {
@@ -27,11 +28,16 @@ const OPENINGS: Opening = {
         from: { x: 2, y: 1 },
         to: { x: 2, y: 3 },
       },
-      // {
-      //   name: "King's Pawn Game: Sicilian Defense, Alapin Variation",
-      //   from: { x: 2, y: 1 },
-      //   to: { x: 2, y: 3 },
-      // },
+      {
+        name: "Alekhine's Defense",
+        from: { x: 6, y: 0 },
+        to: { x: 5, y: 2 },
+      },
+      {
+        name: "Caro-Kann Defense",
+        from: { x: 2, y: 1 },
+        to: { x: 2, y: 2 },
+      },
     ],
   },
   "RNBQKBNR/PP1PPPPP/8/2P5/4p3/5n2/pppp1ppp/rnbqkb1r": {
@@ -54,6 +60,28 @@ const OPENINGS: Opening = {
         name: "c",
         from: { x: 1, y: 0 },
         to: { x: 2, y: 2 },
+      },
+    ],
+  },
+
+  // d4
+  "RNBQKBNR/PPPPPPPP/8/8/3p4/8/ppp1pppp/rnbqkbnr": {
+    responses: [
+      {
+        name: "Modern Defence with 1.d4",
+        from: { x: 6, y: 1 },
+        to: { x: 6, y: 2 },
+      },
+    ],
+  },
+
+  // c4
+  "RNBQKBNR/PPPPPPPP/8/8/2p5/8/pp1ppppp/rnbqkbnr": {
+    responses: [
+      {
+        name: "King's Fianchetto Opening",
+        from: { x: 2, y: 1 },
+        to: { x: 2, y: 3 },
       },
     ],
   },

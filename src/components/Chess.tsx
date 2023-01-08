@@ -70,20 +70,6 @@ export default function Chess() {
 
   const [updater, setUpdater] = useState(0); // This is used to force a re-render
 
-  // This will be temporary until I add board history so you can go back and see the evaluation of each move after the game is over
-  const [moveEvalCounts, setMoveEvalCounts] = useLocalStorage("moveEvaluationCounts", {
-    book: 0,
-    innacuracy: 0,
-    blunder: 0,
-    mistake: 0,
-    good: 0,
-    brilliant: 0,
-    masterful: 0,
-  });
-
-  const [boardHistory, setBoardHistory] = useLocalStorage("boardHistory", [STARTING_POSITION]);
-  const [boardHistoryIndex, setBoardHistoryIndex] = useState(0);
-
   const [moveCount, setMoveCount] = useLocalStorage("moveCount", 0);
 
   // const [pieceElements, setPieceElements] = useState<any>();
@@ -169,7 +155,6 @@ export default function Chess() {
         moves.splice(i, 1);
         i--;
       }
-      // TODO: Check if the king is in check after the move
     }
 
     setAvailableMoves(moves);
@@ -310,7 +295,6 @@ export default function Chess() {
       () => {
         // AI Castle
         if (board[y1][x1] === "K" && !castle.blackKingHasMoved) {
-          // setBlackKingHasMoved(true);
           setCastle((prev) => ({ ...prev, blackKingHasMoved: true }));
 
           if (x2 === 6) {
@@ -423,26 +407,6 @@ export default function Chess() {
       ["p", "p", "p", "p", "p", "p", "p", "p"],
       ["r", "n", "b", "q", "k", "b", "n", "r"],
     ]);
-    setBoard([
-      ["", "R", "", "", "K", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "R", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["k", "", "", "R", "", "", "", ""],
-    ]);
-    // setBoard([
-    //   ["", "", "", "", "K", "", "", ""],
-    //   ["", "", "", "", "", "", "", ""],
-    //   ["", "", "", "", "", "", "", ""],
-    //   ["", "", "", "", "", "", "", ""],
-    //   ["k", "", "", "", "", "", "", ""],
-    //   ["", "R", "R", "", "", "", "", ""],
-    //   ["", "", "", "", "", "", "", ""],
-    //   ["Q", "", "", "", "", "", "", ""],
-    // ]);
 
     setFen(
       boardToFen(
@@ -496,7 +460,7 @@ export default function Chess() {
           gap: "6px",
         }}
       >
-        <p>{fen}</p>
+        <p style={{ fontSize: "1rem" }}>{fen}</p>
         <span
           title="Copy to clipboard"
           style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
@@ -551,6 +515,7 @@ export default function Chess() {
       {showMinimaxDetails ? (
         <div style={{ display: "flex", flexDirection: "column", width: "250px", margin: "auto", marginTop: "10px" }}>
           <p>Checks: {checkCount.toLocaleString()}</p>
+          <p>Depth: {depth}</p>
 
           <p>Minimax Settings</p>
           <div>
