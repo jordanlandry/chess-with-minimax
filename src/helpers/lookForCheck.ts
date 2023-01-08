@@ -1,4 +1,11 @@
-export default function lookForCheck(board: string[][], currentColor: string, x?: number, y?: number, piece?: string) {
+export default function lookForCheck(
+  board: string[][],
+  currentColor: string,
+  move?: { from: { x: number; y: number }; to: { x: number; y: number } },
+  // x?: number,
+  // y?: number,
+  piece?: string
+) {
   let kingX = 0;
   let kingY = 0;
 
@@ -15,13 +22,13 @@ export default function lookForCheck(board: string[][], currentColor: string, x?
 
   // Make the move
   const tempBoard = board.map((row) => [...row]);
-  if (x !== undefined && y !== undefined && piece !== undefined) {
-    tempBoard[y][x] = piece;
-    tempBoard[kingY][kingX] = "";
+  if (move) {
+    tempBoard[move.to.y][move.to.x] = piece!;
+    tempBoard[move.from.y][move.from.x] = "";
 
     if (piece === "k" || piece === "K") {
-      kingX = x;
-      kingY = y;
+      kingX = move.to.x;
+      kingY = move.to.y;
     }
   }
 
