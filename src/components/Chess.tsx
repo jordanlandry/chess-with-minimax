@@ -193,7 +193,7 @@ export default function Chess() {
     }
 
     const prevScore = score;
-    const move = getBestMove([...board], timeToThink * 1000, depth, doAlphaBeta, doMoveOrdering, castle);
+    const move = getBestMove([...board], timeToThink * 1000, doAlphaBeta, doMoveOrdering, castle);
     const newScore = move.score;
 
     // After each move, check if it's a good move or a blunder etc.
@@ -423,15 +423,25 @@ export default function Chess() {
       ["p", "p", "p", "p", "p", "p", "p", "p"],
       ["r", "n", "b", "q", "k", "b", "n", "r"],
     ]);
+    setBoard([
+      ["", "R", "", "", "K", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "R", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["k", "", "", "R", "", "", "", ""],
+    ]);
     // setBoard([
-    //   ["", "R", "", "", "K", "", "", ""],
+    //   ["", "", "", "", "K", "", "", ""],
     //   ["", "", "", "", "", "", "", ""],
     //   ["", "", "", "", "", "", "", ""],
     //   ["", "", "", "", "", "", "", ""],
+    //   ["k", "", "", "", "", "", "", ""],
+    //   ["", "R", "R", "", "", "", "", ""],
     //   ["", "", "", "", "", "", "", ""],
-    //   ["", "", "", "", "", "R", "", ""],
-    //   ["", "", "", "", "", "", "", ""],
-    //   ["k", "", "", "R", "", "", "", ""],
+    //   ["Q", "", "", "", "", "", "", ""],
     // ]);
 
     setFen(

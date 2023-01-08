@@ -17,6 +17,7 @@ export default function lookForCheck(board: string[][], currentColor: string, x?
   const tempBoard = board.map((row) => [...row]);
   if (x !== undefined && y !== undefined && piece !== undefined) {
     tempBoard[y][x] = piece;
+    tempBoard[kingY][kingX] = "";
 
     if (piece === "k" || piece === "K") {
       kingX = x;
@@ -101,19 +102,7 @@ export default function lookForCheck(board: string[][], currentColor: string, x?
   }
 
   // ~~~ STRAIGHT ~~~ \\
-  // Up
-  for (let i = 1; i < 8; i++) {
-    let x = kingX;
-    let y = kingY - i;
-
-    if (inBounds(x, y)) {
-      if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
-      if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
-      if (tempBoard[y][x] !== "") break;
-    }
-  }
-
-  // Down
+  // Look downwards
   for (let i = 1; i < 8; i++) {
     let x = kingX;
     let y = kingY + i;
@@ -125,7 +114,19 @@ export default function lookForCheck(board: string[][], currentColor: string, x?
     }
   }
 
-  // Right
+  // Look upwards
+  for (let i = 1; i < 8; i++) {
+    let x = kingX;
+    let y = kingY - i;
+
+    if (inBounds(x, y)) {
+      if (tempBoard[y][x] === (currentColor === "white" ? "r" : "R")) return true;
+      if (tempBoard[y][x] === (currentColor === "white" ? "q" : "Q")) return true;
+      if (tempBoard[y][x] !== "") break;
+    }
+  }
+
+  // Look right
   for (let i = 1; i < 8; i++) {
     let x = kingX + i;
     let y = kingY;
@@ -137,7 +138,7 @@ export default function lookForCheck(board: string[][], currentColor: string, x?
     }
   }
 
-  // Left
+  // Look left
   for (let i = 1; i < 8; i++) {
     let x = kingX - i;
     let y = kingY;

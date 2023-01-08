@@ -269,9 +269,7 @@ export default function getAvailableMoves(
 
   // Check if the move will result in a check for the player who's turn it is if not, push the move to the array
   function tryMove(x: number, y: number, isCastle?: boolean) {
-    if (lookForCheck(board, currentColor, x, y, piece)) {
-      return;
-    }
+    if (lookForCheck(board, currentColor, x, y, piece)) return;
 
     availableMoves.push({ x, y, isCastle });
   }

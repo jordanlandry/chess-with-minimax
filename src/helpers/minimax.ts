@@ -19,7 +19,6 @@ let elapsedTime = 0;
 export function getBestMove(
   board: string[][],
   timeLimit: number,
-  maxDepth: number,
   doAlphaBeta: boolean,
   doMoveOrdering: boolean,
   castlingProperties: any
@@ -210,9 +209,13 @@ export function evaluateBoard(board: string[][]) {
   const whiteMoves = getAllMoves(board, 0, true);
   const blackMoves = getAllMoves(board, 1, true);
 
-  // // // Check for stalemate
-  if (whiteMoves.length === 0 && !lookForCheck(board, "white")) return 0;
-  if (blackMoves.length === 0 && !lookForCheck(board, "black")) return 0;
+  // if (whiteMoves.length === 0) {
+  //   console.log(board);
+  // }
+
+  // Check for stalemate
+  if (whiteMoves.length === 0 && !lookForCheck(board, "black")) return 0;
+  if (blackMoves.length === 0 && !lookForCheck(board, "white")) return 0;
 
   // // // Check for checkmate
   if (whiteMoves.length === 0) return -checkMateScore; // White is in checkmate
@@ -364,9 +367,9 @@ export function minimax(
       }
 
       // Update transposition table
-      transpositionTable[boardToFen(board, "white")] = nextEval;
-      transpositionSize++;
-      if (transpositionSize > MAX_TRANSPOSITION_TABLE_SIZE) transpositionTable = {};
+      // transpositionTable[boardToFen(board, "white")] = nextEval;
+      // transpositionSize++;
+      // if (transpositionSize > MAX_TRANSPOSITION_TABLE_SIZE) transpositionTable = {};
       // if (Object.keys(transpositionTable).length > MAX_TRANSPOSITION_TABLE_SIZE) transpositionTable = {};
 
       // Update alpha
@@ -470,9 +473,9 @@ export function minimax(
       }
 
       // Update transposition table
-      transpositionTable[boardToFen(board, "black")] = nextEval;
-      transpositionSize++;
-      if (transpositionSize > MAX_TRANSPOSITION_TABLE_SIZE) transpositionTable = {};
+      // transpositionTable[boardToFen(board, "black")] = nextEval;
+      // transpositionSize++;
+      // if (transpositionSize > MAX_TRANSPOSITION_TABLE_SIZE) transpositionTable = {};
 
       // Update alpha
       if (doAlphaBeta) {
