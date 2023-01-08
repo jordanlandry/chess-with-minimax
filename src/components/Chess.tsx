@@ -60,8 +60,7 @@ export default function Chess() {
   const [score, setScore] = useLocalStorage("minMaxScore", 0);
   const [checkCount, setCheckCount] = useState(0);
   const [lastMove, setLastMove] = useLocalStorage("lastMove", undefined);
-  const [useDepth, setUseDepth] = useLocalStorage("useDepth", false);
-  const [depth, setDepth] = useState(useDepth ? 5 : 0);
+  const [depth, setDepth] = useState(0);
 
   const [doAlphaBeta, setDoAlphaBeta] = useLocalStorage("doAlphaBeta", true);
   const [doMoveOrdering, setDoMoveOrdering] = useLocalStorage("doMoveOrdering", true);
@@ -194,14 +193,7 @@ export default function Chess() {
     }
 
     const prevScore = score;
-    const move = getBestMove(
-      [...board],
-      timeToThink * 1000,
-      useDepth ? depth : -1,
-      doAlphaBeta,
-      doMoveOrdering,
-      castle
-    );
+    const move = getBestMove([...board], timeToThink * 1000, depth, doAlphaBeta, doMoveOrdering, castle);
     const newScore = move.score;
 
     // After each move, check if it's a good move or a blunder etc.
@@ -551,50 +543,8 @@ export default function Chess() {
       {showMinimaxDetails ? (
         <div style={{ display: "flex", flexDirection: "column", width: "250px", margin: "auto", marginTop: "10px" }}>
           <p>Checks: {checkCount.toLocaleString()}</p>
-          {/* <p>Depth: {depth}</p> */}
+
           <p>Minimax Settings</p>
-
-          {useDepth ? (
-            <>
-              <p>Depth: {depth}</p>
-              <p>Time to think: {timeToThink}s</p>
-              <div style={{ display: "flex" }}>
-                <button onClick={() => setDepth((prev) => prev - 1)}>-</button>
-                <button onClick={() => setDepth((prev) => prev + 1)}>+</button>
-                <button onClick={() => setDepth(5)}>Reset</button>
-                <button
-                  onClick={() => {
-                    setUseDepth(false);
-                    setDepth(0);
-                    setTimeToThink(2.5);
-                  }}
-                >
-                  Use Time
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <p>Depth: {depth}</p>
-              <p>{`Time to think:  ${timeToThink}s`}</p>
-
-              <div style={{ display: "flex" }}>
-                <button onClick={() => setTimeToThink((prev: any) => (prev > 0.5 ? prev - 0.5 : 0.5))}>-</button>
-                <button onClick={() => setTimeToThink((prev: any) => prev + 0.5)}>+</button>
-                <button onClick={() => setTimeToThink(2.5)}>Reset</button>
-                <button
-                  onClick={() => {
-                    setUseDepth(true);
-                    setTimeToThink(0);
-                    setDepth(5);
-                  }}
-                >
-                  Use Depth
-                </button>
-              </div>
-            </>
-          )}
-
           <div>
             <input
               type="checkbox"
